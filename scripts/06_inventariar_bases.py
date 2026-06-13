@@ -11,10 +11,32 @@ SAIDA_COMPARACAO = PROCESSED / "comparacao_colunas_raw.csv"
 
 
 PADROES = {
-    "cursos": "MICRODADOS_CADASTRO_CURSOS",
-    "ies": "MICRODADOS_ED_SUP_IES",
-    "licenciatura": "LICENCIATURA",
+    "cursos": [
+        "MICRODADOS_CADASTRO_CURSOS",
+        "DM_CURSO",
+        "SUP_CURSO",
+    ],
+    "ies": [
+        "MICRODADOS_ED_SUP_IES",
+        "DM_IES",
+        "SUP_IES",
+    ],
+    "local_oferta": [
+        "DM_LOCAL_OFERTA",
+        "SUP_LOCAL_OFERTA",
+    ],
+    "cine_brasil": [
+        "TB_AUX_CINE_BRASIL",
+    ],
+    "ocde": [
+        "TB_AUX_AREA_OCDE",
+    ],
+    "licenciatura": [
+        "LICENCIATURA",
+    ],
 }
+
+DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 
 
 def contar_linhas_csv(caminho):
@@ -22,10 +44,21 @@ def contar_linhas_csv(caminho):
         return sum(1 for _ in arquivo) - 1
 
 
-def ler_colunas_csv(caminho):
+def detectar_delimitador(caminho):
+    with caminho.open("rb") as arquivo:
+        primeira_linha = arquivo.readline().decode("latin1", errors="replace")
+
+    contagens = {
+        delimitador: primeira_linha.count(delimitador)
+        for delimitador in DELIMITADORES_CANDIDATOS
+    }
+    return max(contagens, key=contagens.get)
+
+
+def ler_colunas_csv(caminho, delimitador):
     return pd.read_csv(
         caminho,
-        sep=";",
+        sep=delimitador,
         encoding="latin1",
         dtype=str,
         nrows=0,
@@ -47,8 +80,8 @@ def contar_linhas_excel(caminho):
 
 def tipo_arquivo(caminho):
     nome = caminho.name.upper()
-    for tipo, padrao in PADROES.items():
-        if padrao in nome:
+    for tipo, padroes in PADROES.items():
+        if any(padrao in nome for padrao in padroes):
             return tipo
     return "outro"
 
@@ -66,9 +99,11 @@ def inventariar():
 
         ano = caminho.parent.name
         tipo = tipo_arquivo(caminho)
+        delimitador = ""
 
         if sufixo == ".csv":
-            colunas = ler_colunas_csv(caminho)
+            delimitador = detectar_delimitador(caminho)
+            colunas = ler_colunas_csv(caminho, delimitador)
             linhas = contar_linhas_csv(caminho)
         else:
             colunas = ler_colunas_excel(caminho)
@@ -79,6 +114,7 @@ def inventariar():
                 "ANO": ano,
                 "TIPO": tipo,
                 "ARQUIVO": str(caminho.relative_to(ROOT)),
+                "DELIMITADOR": delimitador,
                 "QTD_LINHAS": linhas,
                 "QTD_COLUNAS": len(colunas),
                 "COLUNAS": "|".join(colunas),
@@ -128,7 +164,11 @@ def main():
 
     print("Inventário gerado:")
     print(SAIDA_INVENTARIO)
-    print(inventario[["ANO", "TIPO", "QTD_LINHAS", "QTD_COLUNAS", "ARQUIVO"]])
+    print(
+        inventario[
+            ["ANO", "TIPO", "DELIMITADOR", "QTD_LINHAS", "QTD_COLUNAS", "ARQUIVO"]
+        ]
+    )
 
     print("\nComparação com 2024:")
     print(SAIDA_COMPARACAO)

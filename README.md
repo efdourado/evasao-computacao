@@ -28,14 +28,17 @@ evasao-computacao/
 │   └── processed/
 ├── docs/
 │   ├── 01_entendimento_dados.md
-│   └── 02_analise_2024.md
+│   ├── 02_analise_2024.md
+│   └── 03_integracao_historica.md
 ├── scripts/
 │   ├── 01_entender_2024.py
 │   ├── 02_abrir_base.py
 │   ├── 03_diagnostico_2024.py
 │   ├── 04_limpar_2024.py
 │   ├── 05_resumir_2024.py
-│   └── 06_inventariar_bases.py
+│   ├── 06_inventariar_bases.py
+│   ├── 07_consolidar_historico_cursos.py
+│   └── 08_validar_historico.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -161,7 +164,7 @@ docs/02_analise_2024.md
 
 ### `06_inventariar_bases.py`
 
-Inventaria os arquivos disponíveis em `data/raw/`, contando linhas e colunas, e compara as colunas de cada ano com a estrutura de 2024.
+Inventaria os arquivos disponíveis em `data/raw/`, contando linhas e colunas, detectando delimitadores e comparando as colunas de cada ano com a estrutura de 2024. O script reconhece tanto o modelo novo (`MICRODADOS_CADASTRO_CURSOS` e `MICRODADOS_ED_SUP_IES`) quanto o modelo antigo (`DM_CURSO`, `SUP_CURSO`, `DM_IES`, `SUP_IES`, `DM_LOCAL_OFERTA`, `SUP_LOCAL_OFERTA`, tabelas CINE e OCDE).
 
 Arquivos gerados:
 
@@ -169,6 +172,72 @@ Arquivos gerados:
 data/processed/inventario_bases_raw.csv
 data/processed/comparacao_colunas_raw.csv
 ```
+
+### `07_consolidar_historico_cursos.py`
+
+Gera a base histórica expandida de cursos de Computação/TIC usando os anos disponíveis em `data/raw/`.
+
+Arquivos gerados:
+
+```text
+data/processed/historico/computacao_historico_cursos.csv
+data/processed/historico/resumo_historico_por_ano.csv
+```
+
+Essa base é indicada para mapa, dimensão geográfica, filtros e análises dinâmicas. Nos anos antigos, os indicadores de desvinculação/trancamento ficam vazios, pois dependem dos arquivos de aluno.
+
+### `08_validar_historico.py`
+
+Valida a duplicidade lógica da base histórica usando a chave `NU_ANO_CENSO + CO_IES + CO_CURSO`, cria uma base comparável com uma linha por curso e gera diagnósticos para evitar inflar contagens no Power BI.
+
+Arquivos gerados:
+
+```text
+data/processed/historico/computacao_historico_cursos_comparavel.csv
+data/processed/historico/validacao_historico_por_ano.csv
+data/processed/historico/validacao_historico_metricas.csv
+data/processed/historico/validacao_historico_dimensao_metricas.csv
+data/processed/historico/validacao_linhas_por_curso.csv
+data/processed/historico/validacao_top_cursos_multilinhas.csv
+```
+
+Uso recomendado:
+
+```text
+Base expandida: mapas, filtros geográficos e TP_DIMENSAO.
+Base comparável: série histórica, contagem de cursos e comparação por curso/IES.
+```
+
+## Integração histórica
+
+Além da análise de 2024, o projeto já possui uma estratégia inicial para integrar 2017, 2018, 2019, 2022 e 2024.
+
+Documento principal:
+
+```text
+docs/03_integracao_historica.md
+```
+
+Resumo das estruturas:
+
+```text
+2017: modelo antigo, OCDE, DM_CURSO/DM_IES/DM_LOCAL_OFERTA
+2018: modelo antigo, CINE Brasil, DM_CURSO/DM_IES/DM_LOCAL_OFERTA
+2019: modelo antigo, CINE Brasil, SUP_CURSO/SUP_IES/SUP_LOCAL_OFERTA
+2022: modelo novo, CINE, cursos + IES
+2024: modelo novo, CINE, cursos + IES
+```
+
+Os arquivos de aluno (`DM_ALUNO`/`SUP_ALUNO_2019`) ainda não são necessários para montar o panorama histórico por curso e IES, mas serão importantes em uma etapa posterior para aprofundar a análise de situação de vínculo/evasão nos anos antigos.
+
+Após a consolidação, o projeto separa duas bases:
+
+```text
+data/processed/historico/computacao_historico_cursos.csv
+data/processed/historico/computacao_historico_cursos_comparavel.csv
+```
+
+A primeira é expandida por localização/dimensão e deve alimentar mapas. A segunda possui uma linha por `NU_ANO_CENSO + CO_IES + CO_CURSO` e deve ser usada para comparação histórica por curso/IES.
 
 ## Resultados preliminares de 2024
 
@@ -277,9 +346,8 @@ Os indicadores `QT_SIT_DESVINCULADO` e `QT_SIT_TRANCADA` já foram incorporados,
 
 ## Próximos passos
 
-1. Repetir o pipeline para 2022, 2019, 2018 e 2017.
-2. Padronizar as colunas entre os anos.
-3. Construir a base histórica consolidada.
-4. Preparar a estrutura de cruzamento com dados da SBC e do e-MEC.
-5. Identificar quais campos precisarão de scraper ou coleta complementar.
-6. Preparar indicadores e filtros para visualização dinâmica em BI.
+1. Revisar metodologicamente o recorte de 2017, por causa da classificação OCDE.
+2. Preparar tabelas e medidas no Power BI usando a base correta para cada visual.
+3. Preparar a estrutura de cruzamento com dados da SBC e do e-MEC.
+4. Identificar quais campos precisarão de scraper ou coleta complementar.
+5. Baixar/processar arquivos de aluno apenas quando a etapa de evasão detalhada for iniciada.

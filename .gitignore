@@ -4,6 +4,7 @@ __pycache__/
 
 data/raw/
 data/processed/
+data/reference/**/questionarios/
 
 .ipynb_checkpoints/
 .DS_Store
