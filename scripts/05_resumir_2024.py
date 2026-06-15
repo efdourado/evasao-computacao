@@ -140,11 +140,9 @@ Ela foi gerada a partir dos Microdados do Censo da Educação Superior 2024 do I
 
 ## Recorte usado
 
-O recorte provisório de Computação/TIC inclui:
+O recorte oficial de Computação/TIC inclui cursos na área geral 6 da CINE, isto é, Computação e Tecnologias da Informação e Comunicação (TIC).
 
-1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC);
-2. cursos com rótulo CINE `Computação formação de professor`;
-3. cursos identificados por nome ou rótulo como `Engenharia de Computação`.
+Cursos relacionados que estejam em outras áreas gerais, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional e Informática em Saúde, não entram automaticamente nessa base. Eles ficam para revisão na auditoria do recorte.
 
 ## Números principais
 

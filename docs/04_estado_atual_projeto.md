@@ -48,35 +48,28 @@ O recorte atual usa a classificação oficial sempre que possível, evitando dep
 
 Regra aplicada:
 
-1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação;
-2. cursos com rótulo CINE `Computação formação de professor`;
-3. cursos identificados por nome/rótulo como `Engenharia de Computação`.
+1. cursos na área geral 6 da CINE: Computação e Tecnologias da Informação e Comunicação.
+
+Cursos relacionados que estejam em outras áreas gerais, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional e Informática em Saúde, não entram automaticamente no recorte oficial. Eles ficam na auditoria para revisão.
 
 ### 2018 e 2019
 
 Regra aplicada:
 
 1. cruzamento com `TB_AUX_CINE_BRASIL` por `CO_CINE_ROTULO`;
-2. área geral CINE Brasil de Computação/TIC;
-3. inclusão de `Computação formação de professor`;
-4. inclusão de `Engenharia de Computação`;
-5. filtro `TP_NIVEL_ACADEMICO = 1`;
-6. exclusão de ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando ausentes.
+2. área geral 6 da CINE Brasil: Computação e Tecnologias da Informação e Comunicação;
+3. filtro `TP_NIVEL_ACADEMICO = 1`;
+4. exclusão de ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando ausentes.
 
 ### 2017
 
 2017 usa classificação OCDE, não CINE. Regra aplicada:
 
-1. `CO_OCDE_AREA_ESPECIFICA = 48`;
-2. inclusão complementar por nomes relacionados a Computação/TIC:
-   `Análise e Desenvolvimento`, `Banco de Dados`, `Ciência de Dados`, `Computação Gráfica`,
-   `Engenharia Computacional`, `Engenharia da Computação`, `Engenharia de Computação`,
-   `Engenharia de Software`, `Gestão da Tecnologia da Informação`, `Jogos Digitais`,
-   `Redes de Computadores`, `Segurança Cibernética`, `Segurança da Informação`,
-   `Sistemas de Informação`, `Sistemas para Internet`, `Tecnologia da Informação`,
-   `Telemática` e `Informática`;
-3. filtro `TP_NIVEL_ACADEMICO = 1`;
-4. exclusão de ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando ausentes.
+1. `CO_OCDE_AREA_ESPECIFICA = 48`, usado como aproximação histórica da área de Computação;
+2. filtro `TP_NIVEL_ACADEMICO = 1`;
+3. exclusão de ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando ausentes.
+
+Termos como `Análise e Desenvolvimento`, `Banco de Dados`, `Ciência de Dados`, `Engenharia de Computação`, `Engenharia de Software`, `Gestão da Tecnologia da Informação`, `Redes de Computadores`, `Sistemas de Informação`, `Tecnologia da Informação` e `Informática` não entram automaticamente no recorte oficial quando estão fora da área/classificação oficial, mas são monitorados pela auditoria.
 
 Ponto de atenção: 2017 é o ano metodologicamente menos comparável, porque usa OCDE enquanto os anos seguintes usam CINE/CINE Brasil.
 
@@ -97,17 +90,17 @@ data/processed/historico/auditoria_possiveis_cursos_fora_recorte.csv
 data/processed/historico/auditoria_recorte_computacao_resumo.csv
 ```
 
-Resultado da auditoria após a revisão do recorte de 2017:
+Resultado da auditoria após o alinhamento do recorte oficial à área geral 6 da CINE/CINE Brasil:
 
 | Ano | Candidatos fora do recorte | Cursos distintos | Nomes distintos |
 | --- | ---: | ---: | ---: |
-| 2017 | 26 | 26 | 19 |
-| 2018 | 44 | 44 | 29 |
-| 2019 | 46 | 46 | 30 |
-| 2022 | 49 | 49 | 34 |
-| 2024 | 55 | 55 | 38 |
+| 2017 | 576 | 576 | 36 |
+| 2018 | 298 | 298 | 43 |
+| 2019 | 326 | 326 | 43 |
+| 2022 | 3.665 | 377 | 49 |
+| 2024 | 5.578 | 502 | 54 |
 
-Essa checagem levou à ampliação do recorte complementar de 2017, que inicialmente estava mais conservador. Os candidatos restantes são, em boa parte, cursos ambíguos ou adjacentes, como Matemática Computacional, Física Computacional, Informática em Saúde, Big Data no Agronegócio, áreas interdisciplinares e algumas engenharias com ênfase em computação. Eles devem ser tratados como lista de revisão metodológica, não como erro automático.
+Os candidatos fora do recorte são cursos relacionados ou adjacentes que não pertencem à área geral 6, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional, Informática em Saúde, Big Data no Agronegócio, áreas interdisciplinares e algumas engenharias com ênfase em computação. Eles devem ser tratados como lista de revisão metodológica, não como erro automático.
 
 ## Pipeline atual
 
@@ -168,11 +161,11 @@ NU_ANO_CENSO + CO_IES + CO_CURSO
 
 | Ano | Registros no recorte expandido | Cursos distintos | IES distintas | Matrículas | Ingressantes | Concluintes | Vagas |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.573 | 2.573 | 989 | 354.513 | 168.049 | 44.340 | 714.852 |
-| 2018 | 2.734 | 2.734 | 1.006 | 374.469 | 182.866 | 46.106 | 839.556 |
-| 2019 | 2.909 | 2.909 | 984 | 392.777 | 195.425 | 47.426 | 1.066.460 |
-| 2022 | 58.623 | 3.669 | 970 | 645.320 | 429.865 | 65.480 | 2.373.648 |
-| 2024 | 78.657 | 3.987 | 977 | 871.845 | 514.619 | 107.078 | 2.776.208 |
+| 2017 | 2.023 | 2.023 | 914 | 270.959 | 126.604 | 35.841 | 535.798 |
+| 2018 | 2.480 | 2.480 | 985 | 333.996 | 163.672 | 43.562 | 790.522 |
+| 2019 | 2.629 | 2.629 | 961 | 354.139 | 183.883 | 44.890 | 1.025.967 |
+| 2022 | 55.007 | 3.341 | 942 | 594.580 | 410.454 | 61.760 | 2.298.785 |
+| 2024 | 73.134 | 3.540 | 943 | 800.222 | 489.067 | 100.488 | 2.641.395 |
 
 Em 2022 e 2024, os registros aumentam muito porque os microdados passam a representar cursos EaD por dimensão/localização. Esse aumento não deve ser lido como crescimento equivalente no número real de cursos.
 
@@ -180,11 +173,11 @@ Em 2022 e 2024, os registros aumentam muito porque os microdados passam a repres
 
 | Ano | Linhas na base expandida | Cursos lógicos | Média de linhas por curso | Máximo de linhas por curso | Cursos com múltiplas linhas |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.573 | 2.573 | 1,00 | 1 | 0 |
-| 2018 | 2.734 | 2.734 | 1,00 | 1 | 0 |
-| 2019 | 2.909 | 2.909 | 1,00 | 1 | 0 |
-| 2022 | 58.623 | 3.669 | 15,98 | 1.112 | 1.030 |
-| 2024 | 78.657 | 3.987 | 19,73 | 1.111 | 1.330 |
+| 2017 | 2.023 | 2.023 | 1,00 | 1 | 0 |
+| 2018 | 2.480 | 2.480 | 1,00 | 1 | 0 |
+| 2019 | 2.629 | 2.629 | 1,00 | 1 | 0 |
+| 2022 | 55.007 | 3.341 | 16,46 | 1.112 | 956 |
+| 2024 | 73.134 | 3.540 | 20,66 | 1.111 | 1.234 |
 
 Interpretação:
 
@@ -207,10 +200,10 @@ Em 2024:
 
 | TP_DIMENSAO | Registros | Cursos distintos | Matrículas | Desvinculados |
 | --- | ---: | ---: | ---: | ---: |
-| 1 - Presencial no Brasil | 2.652 | 2.652 | 362.068 | 81.496 |
-| 2 - EaD no Brasil | 74.614 | 1.330 | 509.339 | 238.604 |
-| 3 - EaD somente nível Brasil | 1.335 | 1.335 | 0 | 0 |
-| 4 - EaD exterior | 56 | 56 | 438 | 111 |
+| 1 - Presencial no Brasil | 2.301 | 2.301 | 315.965 | 73.202 |
+| 2 - EaD no Brasil | 69.541 | 1.234 | 483.835 | 229.305 |
+| 3 - EaD somente nível Brasil | 1.239 | 1.239 | 0 | 0 |
+| 4 - EaD exterior | 53 | 53 | 422 | 106 |
 
 Vagas e inscritos EaD aparecem principalmente em `TP_DIMENSAO = 3`, enquanto matrículas, ingressantes, concluintes e situações acadêmicas aparecem distribuídos nas linhas territoriais.
 
@@ -228,12 +221,12 @@ QT_SIT_FALECIDO
 Em 2024, no recorte de Computação/TIC:
 
 ```text
-Matrículas: 871.845
-Trancadas: 190.893
-Desvinculados: 320.211
-Transferidos: 23.433
-Falecidos: 85
-Desvinculados/matrículas: 36,73%
+Matrículas: 800.222
+Trancadas: 179.110
+Desvinculados: 302.613
+Transferidos: 19.763
+Falecidos: 74
+Desvinculados/matrículas: 37,82%
 ```
 
 Esse percentual é exploratório. Ele não deve ser apresentado como taxa final de evasão sem uma definição metodológica mais forte.
@@ -246,11 +239,11 @@ Validação atual:
 
 | Ano | Origem da situação acadêmica | Cursos com dado de aluno | Matrículas | Concluintes/Formados | Trancadas | Desvinculados | Transferidos | Falecidos | Desvinculados/matrículas |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | `DM_ALUNO.CSV` | 2.573 | 354.513 | 44.340 | 74.904 | 110.382 | 5.792 | 46 | 31,14% |
-| 2018 | `DM_ALUNO.CSV` | 2.734 | 374.469 | 46.106 | 76.198 | 118.756 | 7.621 | 48 | 31,71% |
-| 2019 | `SUP_ALUNO_2019.CSV` | 2.909 | 392.777 | 47.426 | 79.540 | 130.125 | 6.850 | 75 | 33,13% |
-| 2022 | cadastro de cursos | 0 | 645.320 | 65.480 | 150.770 | 214.515 | 8.769 | 80 | 33,24% |
-| 2024 | cadastro de cursos | 0 | 871.845 | 107.078 | 190.893 | 320.211 | 23.433 | 85 | 36,73% |
+| 2017 | `DM_ALUNO.CSV` | 2.023 | 270.959 | 35.841 | 60.872 | 85.814 | 4.262 | 40 | 31,67% |
+| 2018 | `DM_ALUNO.CSV` | 2.480 | 333.996 | 43.562 | 69.898 | 107.247 | 6.939 | 45 | 32,11% |
+| 2019 | `SUP_ALUNO_2019.CSV` | 2.629 | 354.139 | 44.890 | 72.085 | 119.676 | 6.306 | 69 | 33,79% |
+| 2022 | cadastro de cursos | 0 | 594.580 | 61.760 | 141.220 | 203.332 | 7.961 | 72 | 34,20% |
+| 2024 | cadastro de cursos | 0 | 800.222 | 100.488 | 179.110 | 302.613 | 19.763 | 74 | 37,82% |
 
 Checagem de consistência:
 
@@ -325,12 +318,11 @@ Sugestão de páginas no Power BI:
 
 Não são bloqueios para continuar, mas são decisões metodológicas importantes:
 
-1. se o recorte de Computação/TIC deve continuar combinando CINE/OCDE com exceções por nome;
-2. como apresentar 2017, já que usa OCDE e é menos comparável;
+1. como apresentar 2017, já que usa OCDE e é menos comparável;
+2. se algum curso adjacente listado na auditoria deve aparecer em uma visão ampliada, separada do recorte oficial;
 3. se a taxa exploratória `desvinculados/matrículas` é suficiente para a primeira visualização ou se o professor prefere outra definição de evasão;
 4. se os arquivos de docente entram como enriquecimento ou ficam fora da primeira entrega;
-5. se algum curso ambíguo listado na auditoria deve entrar ou permanecer fora;
-6. quais fontes externas entram primeiro: SBC, e-MEC ou coleta por scraper.
+5. quais fontes externas entram primeiro: SBC, e-MEC ou coleta por scraper.
 
 ## Próximas decisões práticas
 

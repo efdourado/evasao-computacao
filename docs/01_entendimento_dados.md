@@ -34,15 +34,13 @@ CO_IES
 
 A variável `CO_IES` identifica a instituição e permite conectar a base de cursos com a base de IES.
 
-## Recorte provisório de Computação
+## Recorte oficial de Computação
 
-O filtro inicial por termos no nome do curso foi substituído por uma regra mais estável, baseada principalmente na classificação CINE:
+O filtro inicial por termos no nome do curso foi substituído por uma regra baseada na classificação CINE:
 
-1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP;
-2. cursos com rótulo CINE `Computação formação de professor`;
-3. cursos identificados por nome ou rótulo como `Engenharia de Computação`.
+1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP.
 
-Essa regra é provisória, mas é mais defensável que uma busca ampla por palavras, pois inclui cursos como Ciência de Dados, Sistemas para Internet, Jogos Digitais, Segurança da Informação e Inteligência Artificial.
+Cursos relacionados que estejam em outras áreas gerais, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional e Informática em Saúde, ficam fora do recorte oficial e são tratados pela auditoria de candidatos.
 
 ## Bases geradas
 
@@ -55,10 +53,10 @@ data/processed/computacao_2024_preliminar.csv
 Resultado:
 
 ```text
-78657 linhas
+73134 linhas
 37 colunas
-3987 cursos distintos
-977 IES distintas
+3540 cursos distintos
+943 IES distintas
 ```
 
 A base tratada foi gerada em:
@@ -70,7 +68,7 @@ data/processed/computacao_2024_tratada.csv
 Resultado:
 
 ```text
-78657 linhas
+73134 linhas
 44 colunas
 ```
 
@@ -128,9 +126,7 @@ QT_SIT_FALECIDO
 ### Critério de entrada no recorte
 
 ```text
-CINE área geral Computação/TIC                  73134
-Nome/rótulo Engenharia de Computação             3731
-CINE rótulo Computação formação de professor     1792
+CINE área geral 6 Computação/TIC                73134
 ```
 
 ### Valores ausentes
@@ -138,10 +134,10 @@ CINE rótulo Computação formação de professor     1792
 A coluna com maior quantidade de valores ausentes foi:
 
 ```text
-SG_IES: 7912 ausentes
+SG_IES: 7507 ausentes
 ```
 
-As colunas de localização do curso apresentaram valores ausentes em 1391 registros:
+As colunas de localização do curso apresentaram valores ausentes em 1292 registros:
 
 ```text
 NO_MUNICIPIO
@@ -189,18 +185,18 @@ Esses códigos ainda podem receber rótulos descritivos com apoio do dicionário
 ### Indicadores agregados
 
 ```text
-Vagas: 2.776.208
-Inscritos: 1.532.590
-Ingressantes: 514.619
-Matriculados: 871.845
-Concluintes: 107.078
-Matrículas trancadas: 190.893
-Desvinculados: 320.211
-Transferidos: 23.433
-Falecidos: 85
+Vagas: 2.641.395
+Inscritos: 1.423.984
+Ingressantes: 489.067
+Matriculados: 800.222
+Concluintes: 100.488
+Matrículas trancadas: 179.110
+Desvinculados: 302.613
+Transferidos: 19.763
+Falecidos: 74
 ```
 
-A razão `desvinculados/matriculados` em 2024 fica em aproximadamente 36,73%. Esse valor deve ser tratado como indicador exploratório, não como taxa final de evasão, porque a metodologia definitiva depende da modelagem histórica e da validação conceitual do projeto.
+A razão `desvinculados/matriculados` em 2024 fica em aproximadamente 37,82%. Esse valor deve ser tratado como indicador exploratório, não como taxa final de evasão, porque a metodologia definitiva depende da modelagem histórica e da validação conceitual do projeto.
 
 ## Principais cursos capturados
 
@@ -210,14 +206,13 @@ Gestão Da Tecnologia Da Informação               8597
 Engenharia De Software                           7119
 Redes De Computadores                            5125
 Sistemas De Informação                           4909
-Ciência Da Computação                            4019
-Engenharia De Computação                         3651
+Ciência Da Computação                            3781
 Sistemas Para Internet                           3037
 Jogos Digitais                                   2855
 Ciência De Dados                                 2813
 Segurança Da Informação                          2417
 Banco De Dados                                   1950
-Ciências Da Computação                           1908
+Ciências Da Computação                           1906
 Segurança Cibernética                            1152
 Defesa Cibernética                               1074
 Cibersegurança                                   1072
@@ -234,11 +229,9 @@ Redes de computadores                      5125
 Ciência de dados                           5005
 Defesa cibernética                         3895
 Sistemas para internet                     3740
-Engenharia de computação                   3731
 Jogos digitais                             2982
 Banco de dados                             2817
 Segurança da informação                    2419
-Computação formação de professor           1792
 Inteligência artificial                    1222
 ```
 

@@ -282,19 +282,10 @@ def processar_ano_novo(ano):
     ]:
         cursos[col] = limpar_codigo(cursos[col])
 
-    texto = normalizar(cursos["NO_CINE_ROTULO"]) + " " + normalizar(cursos["NO_CURSO"])
     filtro_area = cursos["CO_CINE_AREA_GERAL"].isin(["6", "06"])
-    filtro_lic = texto.str.contains("COMPUTAÇÃO FORMAÇÃO DE PROFESSOR", regex=False)
-    filtro_eng = texto.str.contains("ENGENHARIA DE COMPUTAÇÃO", regex=False)
 
-    base = cursos[filtro_area | filtro_lic | filtro_eng].copy()
-    base["DS_CRITERIO_ESCOPO"] = "CINE área geral Computação/TIC"
-    base.loc[filtro_lic.loc[base.index], "DS_CRITERIO_ESCOPO"] = (
-        "CINE rótulo Computação formação de professor"
-    )
-    base.loc[filtro_eng.loc[base.index], "DS_CRITERIO_ESCOPO"] = (
-        "Nome/rótulo Engenharia de Computação"
-    )
+    base = cursos[filtro_area].copy()
+    base["DS_CRITERIO_ESCOPO"] = "CINE área geral 6 Computação/TIC"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
@@ -373,20 +364,10 @@ def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
     cine["CO_CINE_ROTULO"] = limpar_codigo(cine["CO_CINE_ROTULO"])
 
     base = cursos.merge(cine, on="CO_CINE_ROTULO", how="left")
-    texto = normalizar(base["NO_CINE_ROTULO"]) + " " + normalizar(base["NO_CURSO"])
-
     filtro_area = limpar_codigo(base["CO_CINE_AREA_GERAL"]).isin(["6", "06"])
-    filtro_lic = texto.str.contains("COMPUTAÇÃO FORMAÇÃO DE PROFESSOR", regex=False)
-    filtro_eng = texto.str.contains("ENGENHARIA DE COMPUTAÇÃO", regex=False)
 
-    base = base[filtro_graduacao_sem_abi(base) & (filtro_area | filtro_lic | filtro_eng)].copy()
-    base["DS_CRITERIO_ESCOPO"] = "CINE Brasil área geral Computação/TIC"
-    base.loc[filtro_lic.loc[base.index], "DS_CRITERIO_ESCOPO"] = (
-        "CINE Brasil rótulo Computação formação de professor"
-    )
-    base.loc[filtro_eng.loc[base.index], "DS_CRITERIO_ESCOPO"] = (
-        "Nome/rótulo Engenharia de Computação"
-    )
+    base = base[filtro_graduacao_sem_abi(base) & filtro_area].copy()
+    base["DS_CRITERIO_ESCOPO"] = "CINE Brasil área geral 6 Computação/TIC"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
@@ -479,18 +460,10 @@ def processar_ano_ocde_2017():
         how="left",
     )
 
-    texto = normalizar(base["NO_OCDE"]) + " " + normalizar(base["NO_CURSO"])
     filtro_area = base["CO_OCDE_AREA_ESPECIFICA"].eq("48")
-    filtro_complementar = texto.str.contains(
-        "ANÁLISE E DESENVOLVIMENTO|BANCO DE DADOS|CIÊNCIA DE DADOS|COMPUTAÇÃO GRÁFICA|ENGENHARIA COMPUTACIONAL|ENGENHARIA DA COMPUTAÇÃO|ENGENHARIA DE COMPUTAÇÃO|ENGENHARIA DE SOFTWARE|GESTÃO DA TECNOLOGIA DA INFORMAÇÃO|JOGOS DIGITAIS|REDES DE COMPUTADORES|SEGURANÇA CIBERNÉTICA|SEGURANÇA DA INFORMAÇÃO|SISTEMAS DE INFORMAÇÃO|SISTEMAS PARA INTERNET|TECNOLOGIA DA INFORMAÇÃO|TELEMÁTICA|INFORMÁTICA",
-        regex=True,
-    )
 
-    base = base[filtro_graduacao_sem_abi(base) & (filtro_area | filtro_complementar)].copy()
-    base["DS_CRITERIO_ESCOPO"] = "OCDE área específica Computação"
-    base.loc[filtro_complementar.loc[base.index], "DS_CRITERIO_ESCOPO"] = (
-        "OCDE/nome relacionado a Computação"
-    )
+    base = base[filtro_graduacao_sem_abi(base) & filtro_area].copy()
+    base["DS_CRITERIO_ESCOPO"] = "OCDE área específica 48 Computação"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 

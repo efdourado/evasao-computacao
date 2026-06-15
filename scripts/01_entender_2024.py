@@ -93,8 +93,6 @@ def carregar_dados():
 def filtrar_computacao(cursos):
     co_area_geral = limpar_codigo(cursos["CO_CINE_AREA_GERAL"])
     no_area_geral = normalizar_texto(cursos["NO_CINE_AREA_GERAL"])
-    no_cine = normalizar_texto(cursos["NO_CINE_ROTULO"])
-    no_curso = normalizar_texto(cursos["NO_CURSO"])
 
     filtro_cine_tic = (
         co_area_geral.isin(["6", "06"])
@@ -104,30 +102,10 @@ def filtrar_computacao(cursos):
         )
     )
 
-    filtro_licenciatura = no_cine.str.contains(
-        "COMPUTAÇÃO FORMAÇÃO DE PROFESSOR",
-        regex=False,
-    )
-
-    filtro_eng_computacao = (
-        no_cine.str.contains("ENGENHARIA DE COMPUTAÇÃO", regex=False)
-        | no_curso.str.contains("ENGENHARIA DE COMPUTAÇÃO", regex=False)
-    )
-
-    computacao = cursos[
-        filtro_cine_tic | filtro_licenciatura | filtro_eng_computacao
-    ].copy()
+    computacao = cursos[filtro_cine_tic].copy()
 
     computacao["IN_ESCOPO_COMPUTACAO"] = True
-    computacao["DS_CRITERIO_ESCOPO"] = "CINE área geral Computação/TIC"
-    computacao.loc[
-        filtro_licenciatura.loc[computacao.index],
-        "DS_CRITERIO_ESCOPO",
-    ] = "CINE rótulo Computação formação de professor"
-    computacao.loc[
-        filtro_eng_computacao.loc[computacao.index],
-        "DS_CRITERIO_ESCOPO",
-    ] = "Nome/rótulo Engenharia de Computação"
+    computacao["DS_CRITERIO_ESCOPO"] = "CINE área geral 6 Computação/TIC"
 
     print(f"Registros de Computação/TIC encontrados: {computacao.shape}")
     print("Critérios de entrada:")

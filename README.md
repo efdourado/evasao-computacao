@@ -84,13 +84,11 @@ pip freeze > requirements.txt
 
 ### `01_entender_2024.py`
 
-Carrega os arquivos de cursos e IES de 2024, cruza as bases por `NU_ANO_CENSO` e `CO_IES`, aplica um recorte provisório de Computação/TIC e gera arquivos em `data/processed/`.
+Carrega os arquivos de cursos e IES de 2024, cruza as bases por `NU_ANO_CENSO` e `CO_IES`, aplica o recorte oficial de Computação/TIC pela área geral 6 da CINE e gera arquivos em `data/processed/`.
 
 O recorte atual inclui:
 
-* cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP;
-* cursos com rótulo CINE `Computação formação de professor`;
-* cursos identificados por nome/rótulo como `Engenharia de Computação`.
+* cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP.
 
 Arquivo principal gerado:
 
@@ -105,7 +103,7 @@ Abre a base preliminar gerada e imprime informações iniciais, como tamanho da 
 Resultado obtido até o momento:
 
 ```text
-78657 linhas x 37 colunas
+73134 linhas x 37 colunas
 ```
 
 ### `03_diagnostico_2024.py`
@@ -289,17 +287,17 @@ A primeira é expandida por localização/dimensão e deve alimentar mapas. A se
 
 ## Recorte de Computação/TIC
 
-O filtro prioriza classificações oficiais de área e usa nomes de curso apenas como complemento:
+O filtro principal prioriza a classificação oficial de área. Cursos relacionados que estejam fora da área geral 6 ficam separados na auditoria do recorte.
 
 ```text
-2022/2024: CINE Computação/TIC + Computação formação de professor + Engenharia de Computação.
-2018/2019: CINE Brasil Computação/TIC + Computação formação de professor + Engenharia de Computação.
-2017: OCDE área específica 48 + complemento por nomes fortes de Computação/TIC.
+2022/2024: CINE área geral 6, Computação e Tecnologias da Informação e Comunicação.
+2018/2019: CINE Brasil área geral 6, Computação e Tecnologias da Informação e Comunicação.
+2017: OCDE área específica 48, usada como aproximação histórica da área de Computação.
 ```
 
 Em todos os anos antigos, o pipeline filtra graduação por `TP_NIVEL_ACADEMICO = 1` e exclui ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes.
 
-A lista detalhada de termos, exceções, validações e candidatos ambíguos está documentada em:
+A lista detalhada de validações e candidatos fora do recorte oficial está documentada em:
 
 ```text
 docs/03_integracao_historica.md
@@ -311,55 +309,53 @@ docs/04_estado_atual_projeto.md
 A execução atual gerou uma base preliminar com:
 
 ```text
-78657 registros
+73134 registros
 37 colunas
 ```
 
 E uma base tratada com:
 
 ```text
-78657 registros
+73134 registros
 44 colunas
-3987 cursos distintos
-977 IES distintas
+3540 cursos distintos
+943 IES distintas
 ```
 
 Distribuição por `TP_DIMENSAO`:
 
 ```text
-2    74614
-1     2652
-3     1335
-4       56
+2    69541
+1     2301
+3     1239
+4       53
 ```
 
 Distribuição por modalidade:
 
 ```text
-TP_MODALIDADE_ENSINO = 2    76005
-TP_MODALIDADE_ENSINO = 1     2652
+TP_MODALIDADE_ENSINO = 2    70833
+TP_MODALIDADE_ENSINO = 1     2301
 ```
 
 Critérios de entrada no recorte:
 
 ```text
-CINE área geral Computação/TIC                  73134
-Nome/rótulo Engenharia de Computação             3731
-CINE rótulo Computação formação de professor     1792
+CINE área geral 6 Computação/TIC                73134
 ```
 
 Indicadores agregados na base tratada:
 
 ```text
-Vagas: 2.776.208
-Inscritos: 1.532.590
-Ingressantes: 514.619
-Matriculados: 871.845
-Concluintes: 107.078
-Matrículas trancadas: 190.893
-Desvinculados: 320.211
-Transferidos: 23.433
-Falecidos: 85
+Vagas: 2.641.395
+Inscritos: 1.423.984
+Ingressantes: 489.067
+Matriculados: 800.222
+Concluintes: 100.488
+Matrículas trancadas: 179.110
+Desvinculados: 302.613
+Transferidos: 19.763
+Falecidos: 74
 ```
 
 Principais nomes de curso identificados:
@@ -370,14 +366,13 @@ Gestão Da Tecnologia Da Informação             8597
 Engenharia De Software                         7119
 Redes De Computadores                          5125
 Sistemas De Informação                         4909
-Ciência Da Computação                          4019
-Engenharia De Computação                       3651
+Ciência Da Computação                          3781
 Sistemas Para Internet                          3037
 Jogos Digitais                                  2855
 Ciência De Dados                                2813
 Segurança Da Informação                         2417
 Banco De Dados                                 1950
-Ciências Da Computação                         1908
+Ciências Da Computação                         1906
 Segurança Cibernética                          1152
 Defesa Cibernética                             1074
 Cibersegurança                                 1072
@@ -394,11 +389,10 @@ Redes de computadores                      5125
 Ciência de dados                           5005
 Defesa cibernética                         3895
 Sistemas para internet                     3740
-Engenharia de computação                   3731
 Jogos digitais                             2982
 Banco de dados                             2817
 Segurança da informação                    2419
-Computação formação de professor           1792
+Inteligência artificial                    1222
 ```
 
 ## Pontos de atenção
