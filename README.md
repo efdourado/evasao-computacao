@@ -67,7 +67,7 @@ Ativar o ambiente virtual no Windows:
 Instalar dependências:
 
 ```bash
-pip install pandas openpyxl
+pip install -r .\requirements.txt
 ```
 
 Salvar dependências:

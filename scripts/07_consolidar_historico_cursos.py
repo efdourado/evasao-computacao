@@ -220,6 +220,13 @@ def processar_ano_novo(ano):
     arq_cursos = RAW / ano / f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"
     arq_ies = RAW / ano / f"MICRODADOS_ED_SUP_IES_{ano}.CSV"
 
+    if not arq_cursos.exists():
+        print(f"[{ano}] Arquivo não encontrado: {arq_cursos}")
+        return pd.DataFrame()
+    if not arq_ies.exists():
+        print(f"[{ano}] Arquivo não encontrado: {arq_ies}")
+        return pd.DataFrame()
+
     cols_cursos = [
         "NU_ANO_CENSO",
         "CO_IES",
@@ -327,6 +334,16 @@ def processar_ano_novo(ano):
 
 
 def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
+    if not arq_curso.exists():
+        print(f"[{ano}] Arquivo não encontrado: {arq_curso}")
+        return pd.DataFrame()
+    if not arq_ies.exists():
+        print(f"[{ano}] Arquivo não encontrado: {arq_ies}")
+        return pd.DataFrame()
+    if not arq_cine.exists():
+        print(f"[{ano}] Arquivo não encontrado: {arq_cine}")
+        return pd.DataFrame()
+
     cols_curso = [
         "NU_ANO_CENSO",
         "CO_IES",
@@ -411,6 +428,16 @@ def processar_ano_ocde_2017():
     arq_curso = RAW / "2017" / "DM_CURSO.CSV"
     arq_ies = RAW / "2017" / "DM_IES.CSV"
     arq_ocde = RAW / "2017" / "TB_AUX_AREA_OCDE.CSV"
+
+    if not arq_curso.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_curso}")
+        return pd.DataFrame()
+    if not arq_ies.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_ies}")
+        return pd.DataFrame()
+    if not arq_ocde.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_ocde}")
+        return pd.DataFrame()
 
     cols_curso = [
         "NU_ANO_CENSO",
@@ -547,7 +574,13 @@ def main():
         processar_ano_novo("2024"),
     ]
 
-    base = pd.concat(partes, ignore_index=True)
+    partes_validas = [p for p in partes if not p.empty]
+    
+    if not partes_validas:
+        print("Erro: Nenhum arquivo de curso foi encontrado em data/raw para consolidar.")
+        return
+
+    base = pd.concat(partes_validas, ignore_index=True)
     base.to_csv(SAIDA_BASE, sep=";", index=False, encoding="utf-8-sig")
 
     resumo = gerar_resumo(base)
