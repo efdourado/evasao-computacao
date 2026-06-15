@@ -25,6 +25,16 @@ PADROES = {
         "DM_LOCAL_OFERTA",
         "SUP_LOCAL_OFERTA",
     ],
+    "aluno": [
+        "MICRODADOS_CADASTRO_ALUNOS",
+        "DM_ALUNO",
+        "SUP_ALUNO",
+    ],
+    "docente": [
+        "MICRODADOS_CADASTRO_DOCENTES",
+        "DM_DOCENTE",
+        "SUP_DOCENTE",
+    ],
     "cine_brasil": [
         "TB_AUX_CINE_BRASIL",
     ],
@@ -41,12 +51,14 @@ DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 
 def contar_linhas_csv(caminho):
     with caminho.open("rb") as arquivo:
-        return sum(1 for _ in arquivo) - 1
+        return max(sum(1 for _ in arquivo) - 1, 0)
 
 
 def detectar_delimitador(caminho):
     with caminho.open("rb") as arquivo:
         primeira_linha = arquivo.readline().decode("latin1", errors="replace")
+    if not primeira_linha:
+        return ""
 
     contagens = {
         delimitador: primeira_linha.count(delimitador)
@@ -56,6 +68,9 @@ def detectar_delimitador(caminho):
 
 
 def ler_colunas_csv(caminho, delimitador):
+    if caminho.stat().st_size == 0:
+        return []
+
     return pd.read_csv(
         caminho,
         sep=delimitador,

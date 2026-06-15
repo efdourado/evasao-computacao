@@ -201,15 +201,34 @@ QT_SIT_TRANSFERIDO
 QT_SIT_FALECIDO
 ```
 
-Nos anos de 2017, 2018 e 2019, os arquivos de curso disponíveis não trazem essas variáveis agregadas. Para analisar situação de vínculo nesses anos, será necessário baixar e processar:
+Nos anos de 2017, 2018 e 2019, os arquivos de curso disponíveis não trazem essas variáveis agregadas. Para analisar situação de vínculo nesses anos, é necessário processar os arquivos grandes de aluno:
 
 ```text
-2017: DM_ALUNO.CSV
-2018: DM_ALUNO.CSV
-2019: SUP_ALUNO_2019.CSV
+2017: DM_ALUNO.CSV, processado
+2018: DM_ALUNO.CSV, processado
+2019: SUP_ALUNO_2019.CSV, processado
 ```
 
-Esses arquivos são grandes e devem entrar em uma segunda etapa, depois que a base histórica por curso/IES estiver validada.
+O fluxo técnico está preparado e já foi executado para 2017, 2018 e 2019:
+
+```bash
+.venv/bin/python scripts/09_consolidar_alunos_quantitativo.py
+.venv/bin/python scripts/10_mesclar_evasao_historico.py
+```
+
+Enquanto um arquivo de aluno não estiver em `data/raw/ANO/`, ou estiver vazio, esses scripts apenas sinalizam que a etapa daquele ano permanece pendente.
+
+Validação atual da situação acadêmica:
+
+| Ano | Origem da situação | Cursos com dado de aluno | Matrículas | Trancadas | Desvinculados | Transferidos | Falecidos | Desvinculados/matrículas |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2017 | `DM_ALUNO.CSV` | 2.316 | 313.984 | 66.421 | 94.303 | 5.043 | 43 | 30,03% |
+| 2018 | `DM_ALUNO.CSV` | 2.734 | 374.469 | 76.198 | 118.756 | 7.621 | 48 | 31,71% |
+| 2019 | `SUP_ALUNO_2019.CSV` | 2.909 | 392.777 | 79.540 | 130.125 | 6.850 | 75 | 33,13% |
+| 2022 | cadastro de cursos | 0 | 645.320 | 150.770 | 214.515 | 8.769 | 80 | 33,24% |
+| 2024 | cadastro de cursos | 0 | 871.845 | 190.893 | 320.211 | 23.433 | 85 | 36,73% |
+
+Em 2017, 2018 e 2019, `QT_MAT` bate com `QT_ALUNO_CURSANDO + QT_ALUNO_FORMADO`, e `QT_CONC` bate com `QT_ALUNO_FORMADO`, o que valida a agregação dos arquivos de aluno nesses anos.
 
 ## Prévia do recorte de Computação/TIC
 
@@ -231,7 +250,7 @@ Resumo histórico gerado pelo pipeline:
 data/processed/historico/resumo_historico_por_ano.csv
 ```
 
-Nos anos de 2017, 2018 e 2019, os campos `QT_SIT_TRANCADA`, `QT_SIT_DESVINCULADO`, `QT_SIT_TRANSFERIDO` e `QT_SIT_FALECIDO` aparecem vazios por ausência dessas variáveis nos arquivos de curso antigos.
+Nos arquivos de curso de 2017, 2018 e 2019, os campos `QT_SIT_TRANCADA`, `QT_SIT_DESVINCULADO`, `QT_SIT_TRANSFERIDO` e `QT_SIT_FALECIDO` não existem. Eles foram reconstruídos a partir dos arquivos de aluno e incorporados na base final `computacao_historico_com_evasao.csv`.
 
 ## Organização recomendada dos dados
 
