@@ -5,32 +5,26 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
-PROCESSED = ROOT / "data" / "processed"
-HISTORICO = PROCESSED / "historico"
+HISTORICO = ROOT / "data" / "processed" / "historico"
 
 BASE_CURSOS = HISTORICO / "computacao_historico_cursos_comparavel.csv"
 SAIDA_ALUNOS = HISTORICO / "alunos_computacao_quantitativo.csv"
 
+ANOS_ALVO = ["2017", "2018", "2019", "2022", "2024"]
+CHAVE_CURSO = ["NU_ANO_CENSO", "CO_IES", "CO_CURSO"]
 DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 
 MAPA_SITUACAO = {
-    "2": "QT_CURSANDO",
-    "3": "QT_TRANCADO",
-    "4": "QT_DESVINCULADO",
-    "5": "QT_TRANSFERIDO",
-    "6": "QT_FORMADO",
+    "2": "QT_ALUNO_CURSANDO",
+    "3": "QT_ALUNO_TRANCADA",
+    "4": "QT_ALUNO_DESVINCULADO",
+    "5": "QT_ALUNO_TRANSFERIDO",
+    "6": "QT_ALUNO_FORMADO",
+    "7": "QT_ALUNO_FALECIDO",
 }
 
-COLUNAS_SAIDA = [
-    "NU_ANO_CENSO",
-    "CO_IES",
-    "CO_CURSO",
-    "QT_CURSANDO",
-    "QT_TRANCADO",
-    "QT_DESVINCULADO",
-    "QT_TRANSFERIDO",
-    "QT_FORMADO",
-]
+COLUNAS_ALUNO = list(MAPA_SITUACAO.values())
+COLUNAS_SAIDA = CHAVE_CURSO + COLUNAS_ALUNO + ["QT_ALUNO_TOTAL_VINCULOS"]
 
 
 def detectar_delimitador(caminho):
@@ -51,139 +45,195 @@ def localizar_arquivo_aluno(ano):
         "DM_ALUNO.CSV",
     ]
 
-    for candidato in candidatos:
-        caminho = pasta_ano / candidato
+    for nome in candidatos:
+        caminho = pasta_ano / nome
         if caminho.exists():
             return caminho
 
-    # Tenta achar qualquer arquivo que contenha 'ALUNO' no nome
-    arquivos = list(pasta_ano.glob("*ALUNO*.CSV")) + list(pasta_ano.glob("*ALUNO*.csv"))
+    arquivos = sorted(pasta_ano.glob("*ALUNO*.CSV")) + sorted(
+        pasta_ano.glob("*ALUNO*.csv")
+    )
     return arquivos[0] if arquivos else None
+
+
+def primeira_coluna_existente(colunas, candidatos):
+    return next((coluna for coluna in candidatos if coluna in colunas), None)
+
+
+def normalizar_chaves(df, colunas):
+    for coluna in colunas:
+        df[coluna] = df[coluna].astype(str).str.replace('"', "", regex=False).str.strip()
+    return df
 
 
 def processar_ano_aluno(ano, cursos_validos):
     caminho = localizar_arquivo_aluno(ano)
-    if not caminho:
-        print(f"[{ano}] Arquivo de alunos não encontrado. Pulando...")
-        return pd.DataFrame()
+    if caminho is None:
+        print(f"[{ano}] Arquivo de alunos nao encontrado. Pulando.")
+        return pd.DataFrame(columns=COLUNAS_SAIDA)
+    if caminho.stat().st_size == 0:
+        print(f"[{ano}] Arquivo de alunos esta vazio: {caminho}. Pulando.")
+        return pd.DataFrame(columns=COLUNAS_SAIDA)
 
     delimitador = detectar_delimitador(caminho)
-    print(f"[{ano}] Processando: {caminho.name} (Delimitador: '{delimitador}')")
+    print(f"[{ano}] Processando {caminho.name} com delimitador {delimitador!r}")
 
-    # Lê apenas o cabeçalho para descobrir o nome exato das colunas
-    header = pd.read_csv(caminho, sep=delimitador, encoding="latin1", nrows=0).columns
-    
-    # Harmonização dos nomes de colunas ao longo dos anos
-    col_situacao = next((c for c in ["TP_SITUACAO_VINCULO", "CO_ALUNO_SITUACAO", "TP_SITUACAO"] if c in header), None)
-    col_nivel = next((c for c in ["TP_NIVEL_ACADEMICO", "CO_NIVEL_ACADEMICO"] if c in header), None)
-    col_curso = "CO_CURSO"
-    col_ies = "CO_IES"
+    header = pd.read_csv(
+        caminho,
+        sep=delimitador,
+        encoding="latin1",
+        nrows=0,
+    ).columns
 
-    if not col_situacao:
-        print(f"[{ano}] ERRO: Coluna de situação de vínculo não encontrada. Pulando...")
-        return pd.DataFrame()
+    col_situacao = primeira_coluna_existente(
+        header,
+        ["TP_SITUACAO", "TP_SITUACAO_VINCULO", "CO_ALUNO_SITUACAO"],
+    )
+    col_nivel = primeira_coluna_existente(
+        header,
+        ["TP_NIVEL_ACADEMICO", "CO_NIVEL_ACADEMICO"],
+    )
+    col_ies = primeira_coluna_existente(header, ["CO_IES"])
+    col_curso = primeira_coluna_existente(header, ["CO_CURSO"])
 
-    colunas_para_ler = [c for c in [col_situacao, col_nivel, col_curso, col_ies] if c is not None]
+    obrigatorias = {
+        "situacao": col_situacao,
+        "CO_IES": col_ies,
+        "CO_CURSO": col_curso,
+    }
+    ausentes = [nome for nome, coluna in obrigatorias.items() if coluna is None]
+    if ausentes:
+        print(f"[{ano}] Colunas obrigatorias ausentes: {', '.join(ausentes)}. Pulando.")
+        return pd.DataFrame(columns=COLUNAS_SAIDA)
 
-    # Para otimização de memória, converte o set de cursos válidos do ano atual
-    cursos_do_ano = set(cursos_validos[cursos_validos["NU_ANO_CENSO"].eq(ano)]["CO_CURSO"])
-    if not cursos_do_ano:
-        print(f"[{ano}] Nenhum curso de Computação encontrado na base histórica para este ano.")
-        return pd.DataFrame()
+    colunas_para_ler = [col_situacao, col_ies, col_curso]
+    if col_nivel is not None:
+        colunas_para_ler.append(col_nivel)
 
-    chunks_processados = []
+    chaves_ano = cursos_validos[cursos_validos["NU_ANO_CENSO"].eq(ano)][
+        ["CO_IES", "CO_CURSO"]
+    ].drop_duplicates()
+    if chaves_ano.empty:
+        print(f"[{ano}] Nenhum curso de Computacao encontrado na base comparavel.")
+        return pd.DataFrame(columns=COLUNAS_SAIDA)
+
+    chaves_ano = normalizar_chaves(chaves_ano.copy(), ["CO_IES", "CO_CURSO"])
+    cursos_do_ano = set(chaves_ano["CO_CURSO"])
+
+    contagens = []
     total_linhas_lidas = 0
+    total_linhas_recorte = 0
 
-    # Lê o arquivo enorme em pedaços de 100.000 linhas
     for chunk in pd.read_csv(
         caminho,
         sep=delimitador,
         encoding="latin1",
         dtype=str,
         usecols=colunas_para_ler,
-        chunksize=100000,
+        chunksize=250_000,
     ):
         total_linhas_lidas += len(chunk)
+        normalizar_chaves(chunk, [col_ies, col_curso])
 
-        # 1. Filtra graduação (se a coluna existir no ano)
-        if col_nivel:
+        if col_nivel is not None:
+            chunk[col_nivel] = chunk[col_nivel].astype(str).str.strip()
             chunk = chunk[chunk[col_nivel].eq("1")]
 
-        # 2. Filtra apenas os cursos de computação
         chunk = chunk[chunk[col_curso].isin(cursos_do_ano)]
-
-        # Se não sobrou nada no chunk após o filtro, pula para o próximo
         if chunk.empty:
             continue
 
-        # 3. Mapeia a situação do vínculo
-        chunk["INDICADOR"] = chunk[col_situacao].map(MAPA_SITUACAO)
-        
-        # Descarta situações que não estamos mapeando (ex: falecidos, etc)
+        chunk = chunk.merge(
+            chaves_ano,
+            left_on=[col_ies, col_curso],
+            right_on=["CO_IES", "CO_CURSO"],
+            how="inner",
+        )
+        if chunk.empty:
+            continue
+
+        total_linhas_recorte += len(chunk)
+        chunk["INDICADOR"] = chunk[col_situacao].astype(str).str.strip().map(
+            MAPA_SITUACAO
+        )
         chunk = chunk.dropna(subset=["INDICADOR"])
+        if chunk.empty:
+            continue
 
-        # 4. Conta os alunos por curso, IES e situação neste chunk
-        contagem_chunk = chunk.groupby([col_ies, col_curso, "INDICADOR"]).size().reset_index(name="QTD")
-        chunks_processados.append(contagem_chunk)
+        contagem = (
+            chunk.groupby(["CO_IES", "CO_CURSO", "INDICADOR"], dropna=False)
+            .size()
+            .reset_index(name="QTD")
+        )
+        contagens.append(contagem)
 
-    print(f"[{ano}] Lidas {total_linhas_lidas:,} linhas. Agregando resultados...")
+    print(f"[{ano}] Linhas lidas: {total_linhas_lidas:,}")
+    print(f"[{ano}] Linhas no recorte Computacao/TIC: {total_linhas_recorte:,}")
 
-    if not chunks_processados:
-        return pd.DataFrame()
+    if not contagens:
+        return pd.DataFrame(columns=COLUNAS_SAIDA)
 
-    # Junta as contagens de todos os chunks
-    todas_contagens = pd.concat(chunks_processados, ignore_index=True)
-    
-    # Agrega novamente (pois o mesmo curso pode ter aparecido em múltiplos chunks)
-    agregado_final = todas_contagens.groupby([col_ies, col_curso, "INDICADOR"])["QTD"].sum().reset_index()
+    agregado = (
+        pd.concat(contagens, ignore_index=True)
+        .groupby(["CO_IES", "CO_CURSO", "INDICADOR"], dropna=False)["QTD"]
+        .sum()
+        .reset_index()
+    )
 
-    # 5. Pivota a tabela para transformar as situações em colunas (QT_CURSANDO, QT_TRANCADO, etc)
-    df_pivotado = agregado_final.pivot(
-        index=[col_ies, col_curso], 
-        columns="INDICADOR", 
-        values="QTD"
-    ).fillna(0).astype(int).reset_index()
+    pivotado = (
+        agregado.pivot(
+            index=["CO_IES", "CO_CURSO"],
+            columns="INDICADOR",
+            values="QTD",
+        )
+        .fillna(0)
+        .reset_index()
+    )
+    pivotado.columns.name = None
+    pivotado["NU_ANO_CENSO"] = ano
 
-    df_pivotado["NU_ANO_CENSO"] = ano
+    for coluna in COLUNAS_ALUNO:
+        if coluna not in pivotado.columns:
+            pivotado[coluna] = 0
+        pivotado[coluna] = pd.to_numeric(pivotado[coluna], errors="coerce").fillna(0)
 
-    return df_pivotado
+    pivotado["QT_ALUNO_TOTAL_VINCULOS"] = pivotado[COLUNAS_ALUNO].sum(axis=1)
+    return pivotado[COLUNAS_SAIDA]
 
 
 def main():
     if not BASE_CURSOS.exists():
-        print(f"Erro: Base de cursos não encontrada ({BASE_CURSOS}).")
-        print("Execute primeiro o script '08_validar_historico.py'.")
+        print(f"Base comparavel nao encontrada: {BASE_CURSOS}")
+        print("Execute primeiro: .venv/bin/python scripts/08_validar_historico.py")
         return
 
-    print("Carregando lista de cursos de Computação válidos...")
-    df_cursos = pd.read_csv(BASE_CURSOS, sep=";", encoding="utf-8-sig", dtype=str)
-    cursos_validos = df_cursos[["NU_ANO_CENSO", "CO_IES", "CO_CURSO"]].dropna().drop_duplicates()
+    HISTORICO.mkdir(parents=True, exist_ok=True)
+    cursos = pd.read_csv(BASE_CURSOS, sep=";", encoding="utf-8-sig", dtype=str)
+    cursos_validos = cursos[CHAVE_CURSO].dropna().drop_duplicates()
+    normalizar_chaves(cursos_validos, CHAVE_CURSO)
 
-    anos_alvo = ["2017", "2018", "2019", "2022", "2024"]
-    resultados_anos = []
+    resultados = []
+    for ano in ANOS_ALVO:
+        resultado_ano = processar_ano_aluno(ano, cursos_validos)
+        if not resultado_ano.empty:
+            resultados.append(resultado_ano)
 
-    for ano in anos_alvo:
-        df_ano = processar_ano_aluno(ano, cursos_validos)
-        if not df_ano.empty:
-            resultados_anos.append(df_ano)
+    if not resultados:
+        print("Nenhum arquivo de aluno foi processado. Etapa permanece em stand-by.")
+        return
 
-    if resultados_anos:
-        print("\nConsolidando série histórica de alunos...")
-        base_final = pd.concat(resultados_anos, ignore_index=True)
+    base_alunos = (
+        pd.concat(resultados, ignore_index=True)
+        .groupby(CHAVE_CURSO, dropna=False)[COLUNAS_ALUNO + ["QT_ALUNO_TOTAL_VINCULOS"]]
+        .sum()
+        .reset_index()
+        .sort_values(CHAVE_CURSO)
+    )
+    base_alunos.to_csv(SAIDA_ALUNOS, sep=";", index=False, encoding="utf-8-sig")
 
-        # Garante que todas as colunas de saída existam, mesmo que fiquem com 0
-        for col in COLUNAS_SAIDA:
-            if col not in base_final.columns:
-                base_final[col] = 0
-
-        # Reordena e salva
-        base_final = base_final[COLUNAS_SAIDA].sort_values(["NU_ANO_CENSO", "CO_IES", "CO_CURSO"])
-        base_final.to_csv(SAIDA_ALUNOS, sep=";", index=False, encoding="utf-8-sig")
-        
-        print(f"\nSucesso! Arquivo gerado: {SAIDA_ALUNOS}")
-        print(base_final.head())
-    else:
-        print("\nNenhum dado quantitativo de alunos foi extraído.")
+    print("Base quantitativa de alunos gerada:")
+    print(SAIDA_ALUNOS)
+    print(base_alunos.groupby("NU_ANO_CENSO")["CO_CURSO"].count())
 
 
 if __name__ == "__main__":
