@@ -47,7 +47,7 @@ data/processed/historico/resumo_historico_por_ano.csv
 A base histórica atual contém:
 
 ```text
-145.239 registros
+145.496 registros
 45 colunas padronizadas
 5 anos integrados: 2017, 2018, 2019, 2022 e 2024
 ```
@@ -97,7 +97,7 @@ Resultado principal:
 
 | Ano | Linhas na base expandida | Curso-IES distintos | Média de linhas por curso | Máximo de linhas por curso | Cursos com múltiplas linhas | Soma `QT_MAT` expandida | Soma `QT_MAT` agregada por curso | Soma do máximo de `QT_MAT` por curso | Razão expandida/máximo |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.316 | 2.316 | 1,00 | 1 | 0 | 313.984 | 313.984 | 313.984 | 1,00 |
+| 2017 | 2.573 | 2.573 | 1,00 | 1 | 0 | 354.513 | 354.513 | 354.513 | 1,00 |
 | 2018 | 2.734 | 2.734 | 1,00 | 1 | 0 | 374.469 | 374.469 | 374.469 | 1,00 |
 | 2019 | 2.909 | 2.909 | 1,00 | 1 | 0 | 392.777 | 392.777 | 392.777 | 1,00 |
 | 2022 | 58.623 | 3.669 | 15,98 | 1.112 | 1.030 | 645.320 | 645.320 | 385.247 | 1,68 |
@@ -118,10 +118,16 @@ Interpretação:
 
 O ano de 2017 usa classificação OCDE. O recorte de Computação não deve depender de `CO_CINE_ROTULO`, pois essa variável não existe na estrutura de 2017.
 
-Regra inicial sugerida:
+Regra aplicada:
 
 * usar `CO_OCDE_AREA_ESPECIFICA = 48` para Computação;
-* incluir casos relevantes de Engenharia de Computação e Redes de Computadores quando classificados fora da área específica 48;
+* incluir casos relevantes por nome/rótulo quando classificados fora da área específica 48:
+  `Análise e Desenvolvimento`, `Banco de Dados`, `Ciência de Dados`, `Computação Gráfica`,
+  `Engenharia Computacional`, `Engenharia da Computação`, `Engenharia de Computação`,
+  `Engenharia de Software`, `Gestão da Tecnologia da Informação`, `Jogos Digitais`,
+  `Redes de Computadores`, `Segurança Cibernética`, `Segurança da Informação`,
+  `Sistemas de Informação`, `Sistemas para Internet`, `Tecnologia da Informação`,
+  `Telemática` e `Informática`;
 * aplicar `TP_NIVEL_ACADEMICO = 1`;
 * aplicar `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes, para evitar Área Básica de Ingresso (ABI) nas estatísticas por área.
 
@@ -129,7 +135,7 @@ Regra inicial sugerida:
 
 Os anos de 2018 e 2019 usam CINE Brasil, mas ainda no modelo antigo.
 
-Regra inicial sugerida:
+Regra aplicada:
 
 * cruzar `DM_CURSO`/`SUP_CURSO` com `TB_AUX_CINE_BRASIL` por `CO_CINE_ROTULO`;
 * usar a área geral CINE de Computação/TIC;
@@ -142,7 +148,7 @@ Regra inicial sugerida:
 
 Os anos de 2022 e 2024 usam o modelo novo, com os arquivos de cursos e IES em formato `;`.
 
-Regra inicial já aplicada em 2024:
+Regra aplicada:
 
 * área geral CINE de Computação/TIC;
 * `Computação formação de professor`;
@@ -222,7 +228,7 @@ Validação atual da situação acadêmica:
 
 | Ano | Origem da situação | Cursos com dado de aluno | Matrículas | Trancadas | Desvinculados | Transferidos | Falecidos | Desvinculados/matrículas |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | `DM_ALUNO.CSV` | 2.316 | 313.984 | 66.421 | 94.303 | 5.043 | 43 | 30,03% |
+| 2017 | `DM_ALUNO.CSV` | 2.573 | 354.513 | 74.904 | 110.382 | 5.792 | 46 | 31,14% |
 | 2018 | `DM_ALUNO.CSV` | 2.734 | 374.469 | 76.198 | 118.756 | 7.621 | 48 | 31,71% |
 | 2019 | `SUP_ALUNO_2019.CSV` | 2.909 | 392.777 | 79.540 | 130.125 | 6.850 | 75 | 33,13% |
 | 2022 | cadastro de cursos | 0 | 645.320 | 150.770 | 214.515 | 8.769 | 80 | 33,24% |
@@ -230,13 +236,42 @@ Validação atual da situação acadêmica:
 
 Em 2017, 2018 e 2019, `QT_MAT` bate com `QT_ALUNO_CURSANDO + QT_ALUNO_FORMADO`, e `QT_CONC` bate com `QT_ALUNO_FORMADO`, o que valida a agregação dos arquivos de aluno nesses anos.
 
+## Auditoria do recorte de Computação/TIC
+
+Para conferir se o filtro deixou cursos importantes para trás, foi criado:
+
+```bash
+.venv/bin/python scripts/11_auditar_recorte_computacao.py
+```
+
+O script procura, nos arquivos brutos de curso, registros que não estão na base comparável mas possuem termos de auditoria ligados a Computação/TIC em `NO_CURSO`, `NO_CINE_ROTULO`, `NO_CINE_AREA_DETALHADA`, `NO_OCDE` ou `NO_OCDE_AREA_DETALHADA`.
+
+Saídas:
+
+```text
+data/processed/historico/auditoria_possiveis_cursos_fora_recorte.csv
+data/processed/historico/auditoria_recorte_computacao_resumo.csv
+```
+
+Resumo atual:
+
+| Ano | Candidatos fora do recorte | Cursos distintos | Nomes distintos |
+| --- | ---: | ---: | ---: |
+| 2017 | 26 | 26 | 19 |
+| 2018 | 44 | 44 | 29 |
+| 2019 | 46 | 46 | 30 |
+| 2022 | 49 | 49 | 34 |
+| 2024 | 55 | 55 | 38 |
+
+Essa auditoria já motivou a ampliação do filtro complementar de 2017, que antes deixava fora cursos como Engenharia da Computação, Engenharia de Software e Gestão da Tecnologia da Informação. Os candidatos restantes devem ser revisados manualmente, porque muitos são áreas adjacentes ou ambíguas, como Matemática Computacional, Física Computacional, Informática em Saúde, Big Data no Agronegócio, áreas interdisciplinares e algumas engenharias com ênfase em computação.
+
 ## Prévia do recorte de Computação/TIC
 
-Prévia calculada com os arquivos disponíveis e regras iniciais:
+Prévia calculada com os arquivos disponíveis e regras atuais:
 
 | Ano | Registros no recorte expandido | Cursos distintos | IES distintas | Matrículas | Ingressantes | Concluintes | Vagas |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.316 | 2.316 | 946 | 313.984 | 146.319 | 38.672 | 584.567 |
+| 2017 | 2.573 | 2.573 | 989 | 354.513 | 168.049 | 44.340 | 714.852 |
 | 2018 | 2.734 | 2.734 | 1.006 | 374.469 | 182.866 | 46.106 | 839.556 |
 | 2019 | 2.909 | 2.909 | 984 | 392.777 | 195.425 | 47.426 | 1.066.460 |
 | 2022 | 58.623 | 3.669 | 970 | 645.320 | 429.865 | 65.480 | 2.373.648 |
@@ -284,6 +319,6 @@ Os questionários podem ser descartados do projeto por enquanto. Eles ajudam a e
 
 1. Usar a base expandida para desenhar os mapas e filtros geográficos no Power BI.
 2. Usar a base comparável por curso para gráficos de série histórica e comparação entre anos.
-3. Revisar o recorte de 2017, pois a classificação OCDE é menos compatível com a CINE usada nos anos seguintes.
+3. Revisar os candidatos ambíguos da auditoria do recorte, se o orientador quiser um escopo mais amplo ou mais restrito.
 4. Definir quais indicadores de evasão podem ser comparados apenas com curso/IES e quais exigem arquivos de aluno.
-5. Só depois baixar/processar `DM_ALUNO` e `SUP_ALUNO_2019` para aprofundar evasão/situação de vínculo.
+5. Decidir se os arquivos de docente entram como enriquecimento posterior.

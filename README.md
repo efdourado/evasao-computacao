@@ -41,7 +41,8 @@ evasao-computacao/
 │   ├── 07_consolidar_historico_cursos.py
 │   ├── 08_validar_historico.py
 │   ├── 09_consolidar_alunos_quantitativo.py
-│   └── 10_mesclar_evasao_historico.py
+│   ├── 10_mesclar_evasao_historico.py
+│   └── 11_auditar_recorte_computacao.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -236,6 +237,19 @@ data/processed/historico/validacao_evasao_alunos_vs_cursos.csv
 
 Atualmente, 2017, 2018 e 2019 já foram processados a partir dos arquivos de aluno.
 
+### `11_auditar_recorte_computacao.py`
+
+Audita o recorte de Computação/TIC procurando, nos arquivos brutos de curso, registros com termos ligados a Computação/TIC que não entraram na base comparável.
+
+Arquivos gerados:
+
+```text
+data/processed/historico/auditoria_possiveis_cursos_fora_recorte.csv
+data/processed/historico/auditoria_recorte_computacao_resumo.csv
+```
+
+Essa auditoria não altera a base automaticamente. Ela serve para revisar possíveis cursos deixados fora do recorte e documentar decisões metodológicas.
+
 ## Integração histórica
 
 Além da análise de 2024, o projeto já possui uma estratégia inicial para integrar 2017, 2018, 2019, 2022 e 2024.
@@ -272,6 +286,25 @@ data/processed/historico/computacao_historico_cursos_comparavel.csv
 ```
 
 A primeira é expandida por localização/dimensão e deve alimentar mapas. A segunda possui uma linha por `NU_ANO_CENSO + CO_IES + CO_CURSO` e deve ser usada para comparação histórica por curso/IES.
+
+## Recorte de Computação/TIC
+
+O filtro prioriza classificações oficiais de área e usa nomes de curso apenas como complemento:
+
+```text
+2022/2024: CINE Computação/TIC + Computação formação de professor + Engenharia de Computação.
+2018/2019: CINE Brasil Computação/TIC + Computação formação de professor + Engenharia de Computação.
+2017: OCDE área específica 48 + complemento por nomes fortes de Computação/TIC.
+```
+
+Em todos os anos antigos, o pipeline filtra graduação por `TP_NIVEL_ACADEMICO = 1` e exclui ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes.
+
+A lista detalhada de termos, exceções, validações e candidatos ambíguos está documentada em:
+
+```text
+docs/03_integracao_historica.md
+docs/04_estado_atual_projeto.md
+```
 
 ## Resultados preliminares de 2024
 
@@ -380,8 +413,8 @@ Os indicadores `QT_SIT_DESVINCULADO` e `QT_SIT_TRANCADA` já foram incorporados,
 
 ## Próximos passos
 
-1. Revisar metodologicamente o recorte de 2017, por causa da classificação OCDE.
-2. Preparar tabelas e medidas no Power BI usando a base correta para cada visual.
+1. Preparar tabelas e medidas no Power BI usando a base correta para cada visual.
+2. Revisar candidatos ambíguos da auditoria do recorte, se o orientador quiser ajustar o escopo.
 3. Preparar a estrutura de cruzamento com dados da SBC e do e-MEC.
 4. Identificar quais campos precisarão de scraper ou coleta complementar.
-5. Baixar/processar arquivos de aluno apenas quando a etapa de evasão detalhada for iniciada.
+5. Decidir se os arquivos de docente entram como enriquecimento posterior.

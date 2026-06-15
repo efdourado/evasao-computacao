@@ -68,11 +68,46 @@ Regra aplicada:
 2017 usa classificação OCDE, não CINE. Regra aplicada:
 
 1. `CO_OCDE_AREA_ESPECIFICA = 48`;
-2. inclusão complementar por nomes relacionados a Computação, como Engenharia de Computação, Redes de Computadores, Sistemas de Informação, Segurança da Informação e Informática;
+2. inclusão complementar por nomes relacionados a Computação/TIC:
+   `Análise e Desenvolvimento`, `Banco de Dados`, `Ciência de Dados`, `Computação Gráfica`,
+   `Engenharia Computacional`, `Engenharia da Computação`, `Engenharia de Computação`,
+   `Engenharia de Software`, `Gestão da Tecnologia da Informação`, `Jogos Digitais`,
+   `Redes de Computadores`, `Segurança Cibernética`, `Segurança da Informação`,
+   `Sistemas de Informação`, `Sistemas para Internet`, `Tecnologia da Informação`,
+   `Telemática` e `Informática`;
 3. filtro `TP_NIVEL_ACADEMICO = 1`;
 4. exclusão de ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando ausentes.
 
 Ponto de atenção: 2017 é o ano metodologicamente menos comparável, porque usa OCDE enquanto os anos seguintes usam CINE/CINE Brasil.
+
+## Auditoria do recorte
+
+Para reduzir o risco de deixar cursos de Computação/TIC fora do recorte, foi criada uma auditoria específica:
+
+```bash
+.venv/bin/python scripts/11_auditar_recorte_computacao.py
+```
+
+Ela procura, nos arquivos brutos de curso, nomes/rótulos com termos de auditoria ligados a Computação/TIC que **não** entraram na base comparável atual. A auditoria não altera o recorte automaticamente; ela gera uma lista para revisão manual.
+
+Arquivos gerados:
+
+```text
+data/processed/historico/auditoria_possiveis_cursos_fora_recorte.csv
+data/processed/historico/auditoria_recorte_computacao_resumo.csv
+```
+
+Resultado da auditoria após a revisão do recorte de 2017:
+
+| Ano | Candidatos fora do recorte | Cursos distintos | Nomes distintos |
+| --- | ---: | ---: | ---: |
+| 2017 | 26 | 26 | 19 |
+| 2018 | 44 | 44 | 29 |
+| 2019 | 46 | 46 | 30 |
+| 2022 | 49 | 49 | 34 |
+| 2024 | 55 | 55 | 38 |
+
+Essa checagem levou à ampliação do recorte complementar de 2017, que inicialmente estava mais conservador. Os candidatos restantes são, em boa parte, cursos ambíguos ou adjacentes, como Matemática Computacional, Física Computacional, Informática em Saúde, Big Data no Agronegócio, áreas interdisciplinares e algumas engenharias com ênfase em computação. Eles devem ser tratados como lista de revisão metodológica, não como erro automático.
 
 ## Pipeline atual
 
@@ -88,6 +123,7 @@ Ponto de atenção: 2017 é o ano metodologicamente menos comparável, porque us
 | `08_validar_historico.py` | valida duplicidade lógica e gera base comparável por curso |
 | `09_consolidar_alunos_quantitativo.py` | prepara agregação de situação de vínculo a partir dos arquivos grandes de aluno |
 | `10_mesclar_evasao_historico.py` | mescla a base comparável com quantitativos derivados dos arquivos de aluno |
+| `11_auditar_recorte_computacao.py` | lista possíveis cursos de Computação/TIC que ficaram fora do recorte |
 
 Ordem recomendada para reproduzir a etapa histórica:
 
@@ -102,6 +138,7 @@ Ordem para atualizar evasão quando arquivos de aluno forem adicionados ou corri
 ```bash
 .venv/bin/python scripts/09_consolidar_alunos_quantitativo.py
 .venv/bin/python scripts/10_mesclar_evasao_historico.py
+.venv/bin/python scripts/11_auditar_recorte_computacao.py
 ```
 
 ## Bases processadas principais
@@ -118,6 +155,8 @@ Ordem para atualizar evasão quando arquivos de aluno forem adicionados ou corri
 | `data/processed/historico/alunos_computacao_quantitativo.csv` | quantitativos de aluno para 2017, 2018 e 2019 |
 | `data/processed/historico/computacao_historico_com_evasao.csv` | base comparável com situação acadêmica preenchida por alunos quando disponível |
 | `data/processed/historico/validacao_evasao_alunos_vs_cursos.csv` | validação entre quantitativos de aluno e agregados de curso |
+| `data/processed/historico/auditoria_possiveis_cursos_fora_recorte.csv` | lista de candidatos que parecem Computação/TIC mas ficaram fora do recorte |
+| `data/processed/historico/auditoria_recorte_computacao_resumo.csv` | resumo anual da auditoria do recorte |
 
 A chave lógica de curso usada na validação é:
 
@@ -129,7 +168,7 @@ NU_ANO_CENSO + CO_IES + CO_CURSO
 
 | Ano | Registros no recorte expandido | Cursos distintos | IES distintas | Matrículas | Ingressantes | Concluintes | Vagas |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.316 | 2.316 | 946 | 313.984 | 146.319 | 38.672 | 584.567 |
+| 2017 | 2.573 | 2.573 | 989 | 354.513 | 168.049 | 44.340 | 714.852 |
 | 2018 | 2.734 | 2.734 | 1.006 | 374.469 | 182.866 | 46.106 | 839.556 |
 | 2019 | 2.909 | 2.909 | 984 | 392.777 | 195.425 | 47.426 | 1.066.460 |
 | 2022 | 58.623 | 3.669 | 970 | 645.320 | 429.865 | 65.480 | 2.373.648 |
@@ -141,7 +180,7 @@ Em 2022 e 2024, os registros aumentam muito porque os microdados passam a repres
 
 | Ano | Linhas na base expandida | Cursos lógicos | Média de linhas por curso | Máximo de linhas por curso | Cursos com múltiplas linhas |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 2017 | 2.316 | 2.316 | 1,00 | 1 | 0 |
+| 2017 | 2.573 | 2.573 | 1,00 | 1 | 0 |
 | 2018 | 2.734 | 2.734 | 1,00 | 1 | 0 |
 | 2019 | 2.909 | 2.909 | 1,00 | 1 | 0 |
 | 2022 | 58.623 | 3.669 | 15,98 | 1.112 | 1.030 |
@@ -207,7 +246,7 @@ Validação atual:
 
 | Ano | Origem da situação acadêmica | Cursos com dado de aluno | Matrículas | Concluintes/Formados | Trancadas | Desvinculados | Transferidos | Falecidos | Desvinculados/matrículas |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2017 | `DM_ALUNO.CSV` | 2.316 | 313.984 | 38.672 | 66.421 | 94.303 | 5.043 | 43 | 30,03% |
+| 2017 | `DM_ALUNO.CSV` | 2.573 | 354.513 | 44.340 | 74.904 | 110.382 | 5.792 | 46 | 31,14% |
 | 2018 | `DM_ALUNO.CSV` | 2.734 | 374.469 | 46.106 | 76.198 | 118.756 | 7.621 | 48 | 31,71% |
 | 2019 | `SUP_ALUNO_2019.CSV` | 2.909 | 392.777 | 47.426 | 79.540 | 130.125 | 6.850 | 75 | 33,13% |
 | 2022 | cadastro de cursos | 0 | 645.320 | 65.480 | 150.770 | 214.515 | 8.769 | 80 | 33,24% |
@@ -290,7 +329,8 @@ Não são bloqueios para continuar, mas são decisões metodológicas importante
 2. como apresentar 2017, já que usa OCDE e é menos comparável;
 3. se a taxa exploratória `desvinculados/matrículas` é suficiente para a primeira visualização ou se o professor prefere outra definição de evasão;
 4. se os arquivos de docente entram como enriquecimento ou ficam fora da primeira entrega;
-5. quais fontes externas entram primeiro: SBC, e-MEC ou coleta por scraper.
+5. se algum curso ambíguo listado na auditoria deve entrar ou permanecer fora;
+6. quais fontes externas entram primeiro: SBC, e-MEC ou coleta por scraper.
 
 ## Próximas decisões práticas
 
