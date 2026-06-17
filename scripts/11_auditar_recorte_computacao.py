@@ -206,6 +206,9 @@ def cursos_novos(ano):
 
 
 def cursos_cine_antigo(ano, caminho_curso, caminho_cine):
+    if caminho_curso is None or caminho_cine is None:
+        return pd.DataFrame()
+
     colunas = [
         "NU_ANO_CENSO",
         "CO_IES",
@@ -228,8 +231,11 @@ def cursos_cine_antigo(ano, caminho_curso, caminho_cine):
 
 
 def cursos_ocde_2017():
-    caminho_curso = RAW / "2017" / "DM_CURSO.CSV"
-    caminho_ocde = RAW / "2017" / "TB_AUX_AREA_OCDE.CSV"
+    caminho_curso = encontrar_arquivo("2017", ["DM_CURSO.CSV"])
+    caminho_ocde = encontrar_arquivo("2017", ["TB_AUX_AREA_OCDE.CSV"])
+    if caminho_curso is None or caminho_ocde is None:
+        return pd.DataFrame()
+
     colunas = [
         "NU_ANO_CENSO",
         "CO_IES",
@@ -274,13 +280,13 @@ def auditar():
         cursos_ocde_2017(),
         cursos_cine_antigo(
             "2018",
-            RAW / "2018" / "DM_CURSO.CSV",
-            RAW / "2018" / "TB_AUX_CINE_BRASIL.CSV",
+            encontrar_arquivo("2018", ["DM_CURSO.CSV"]),
+            encontrar_arquivo("2018", ["TB_AUX_CINE_BRASIL.CSV"]),
         ),
         cursos_cine_antigo(
             "2019",
-            RAW / "2019" / "SUP_CURSO_2019.CSV",
-            RAW / "2019" / "TB_AUX_CINE_BRASIL_2019.CSV",
+            encontrar_arquivo("2019", ["SUP_CURSO_2019.CSV"]),
+            encontrar_arquivo("2019", ["TB_AUX_CINE_BRASIL_2019.CSV"]),
         ),
     ]
     partes.extend(cursos_novos(ano) for ano in anos_cadastro)

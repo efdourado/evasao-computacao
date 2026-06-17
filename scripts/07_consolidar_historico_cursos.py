@@ -407,13 +407,13 @@ def processar_ano_novo(ano):
 
 
 def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
-    if not arq_curso.exists():
+    if arq_curso is None or not arq_curso.exists():
         print(f"[{ano}] Arquivo não encontrado: {arq_curso}")
         return pd.DataFrame()
-    if not arq_ies.exists():
+    if arq_ies is None or not arq_ies.exists():
         print(f"[{ano}] Arquivo não encontrado: {arq_ies}")
         return pd.DataFrame()
-    if not arq_cine.exists():
+    if arq_cine is None or not arq_cine.exists():
         print(f"[{ano}] Arquivo não encontrado: {arq_cine}")
         return pd.DataFrame()
 
@@ -497,17 +497,17 @@ def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
 
 
 def processar_ano_ocde_2017():
-    arq_curso = RAW / "2017" / "DM_CURSO.CSV"
-    arq_ies = RAW / "2017" / "DM_IES.CSV"
-    arq_ocde = RAW / "2017" / "TB_AUX_AREA_OCDE.CSV"
+    arq_curso = encontrar_arquivo("2017", ["DM_CURSO.CSV"])
+    arq_ies = encontrar_arquivo("2017", ["DM_IES.CSV"])
+    arq_ocde = encontrar_arquivo("2017", ["TB_AUX_AREA_OCDE.CSV"])
 
-    if not arq_curso.exists():
+    if arq_curso is None or not arq_curso.exists():
         print(f"[2017] Arquivo não encontrado: {arq_curso}")
         return pd.DataFrame()
-    if not arq_ies.exists():
+    if arq_ies is None or not arq_ies.exists():
         print(f"[2017] Arquivo não encontrado: {arq_ies}")
         return pd.DataFrame()
-    if not arq_ocde.exists():
+    if arq_ocde is None or not arq_ocde.exists():
         print(f"[2017] Arquivo não encontrado: {arq_ocde}")
         return pd.DataFrame()
 
@@ -636,15 +636,15 @@ def main():
             processar_ano_ocde_2017(),
             processar_ano_cine_antigo(
                 "2018",
-                RAW / "2018" / "DM_CURSO.CSV",
-                RAW / "2018" / "DM_IES.CSV",
-                RAW / "2018" / "TB_AUX_CINE_BRASIL.CSV",
+                encontrar_arquivo("2018", ["DM_CURSO.CSV"]),
+                encontrar_arquivo("2018", ["DM_IES.CSV"]),
+                encontrar_arquivo("2018", ["TB_AUX_CINE_BRASIL.CSV"]),
             ),
             processar_ano_cine_antigo(
                 "2019",
-                RAW / "2019" / "SUP_CURSO_2019.CSV",
-                RAW / "2019" / "SUP_IES_2019.CSV",
-                RAW / "2019" / "TB_AUX_CINE_BRASIL_2019.CSV",
+                encontrar_arquivo("2019", ["SUP_CURSO_2019.CSV"]),
+                encontrar_arquivo("2019", ["SUP_IES_2019.CSV"]),
+                encontrar_arquivo("2019", ["TB_AUX_CINE_BRASIL_2019.CSV"]),
             ),
         ]
     )

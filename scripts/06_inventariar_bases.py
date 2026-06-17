@@ -104,7 +104,7 @@ def tipo_arquivo(caminho):
 def inventariar():
     registros = []
 
-    for caminho in sorted(RAW.glob("*/*")):
+    for caminho in sorted(RAW.rglob("*")):
         if not caminho.is_file():
             continue
 
@@ -112,7 +112,13 @@ def inventariar():
         if sufixo not in [".csv", ".xlsx"]:
             continue
 
-        ano = caminho.parent.name
+        partes = caminho.relative_to(RAW).parts
+        if not partes:
+            continue
+        if len(partes) < 3 or partes[1] != "dados":
+            continue
+
+        ano = partes[0]
         tipo = tipo_arquivo(caminho)
         delimitador = ""
 

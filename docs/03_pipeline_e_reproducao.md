@@ -20,6 +20,17 @@ Na etapa atual, `data/raw/` deve conter apenas:
 
 A pasta `data/raw/` não é versionada.
 
+Dentro de cada ano, o padrão é:
+
+```text
+data/raw/ANO/dados/
+data/raw/ANO/referencia/
+```
+
+`dados/` contém apenas os arquivos usados pelo pipeline, como cursos, IES, aluno e tabelas auxiliares de classificação.
+
+`referencia/` contém apenas materiais úteis para consulta, como dicionário de dados, leia-me, nota informativa, filtros e código de país. Questionários, arquivos MD5, temporários e tabelas não usadas no fluxo atual ficam fora.
+
 ## Ambiente
 
 Criar e ativar o ambiente:

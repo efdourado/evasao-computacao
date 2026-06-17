@@ -5,7 +5,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 
-RAW_2024 = ROOT / "data" / "raw" / "2024"
+RAW_2024 = ROOT / "data" / "raw" / "2024" / "dados"
 PROCESSED = ROOT / "data" / "processed"
 PROCESSED.mkdir(parents=True, exist_ok=True)
 

@@ -45,12 +45,12 @@ def localizar_arquivo_aluno(ano):
     ]
 
     for nome in candidatos:
-        caminho = pasta_ano / nome
-        if caminho.exists():
-            return caminho
+        for caminho in sorted(pasta_ano.rglob(nome)):
+            if caminho.exists():
+                return caminho
 
-    arquivos = sorted(pasta_ano.glob("*ALUNO*.CSV")) + sorted(
-        pasta_ano.glob("*ALUNO*.csv")
+    arquivos = sorted(pasta_ano.rglob("*ALUNO*.CSV")) + sorted(
+        pasta_ano.rglob("*ALUNO*.csv")
     )
     return arquivos[0] if arquivos else None
 

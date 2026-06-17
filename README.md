@@ -24,12 +24,13 @@ evasao-computacao/
 ├── data/
 │   ├── raw/
 │   │   ├── 2009/
+│   │   │   ├── dados/
+│   │   │   └── referencia/
 │   │   ├── ...
 │   │   └── 2024/
 │   ├── processed/
 │   │   ├── historico/
 │   │   └── oficial/
-│   └── reference/
 ├── docs/
 │   ├── 01_visao_geral.md
 │   ├── 02_decisoes_metodologicas.md
@@ -59,7 +60,14 @@ evasao-computacao/
 
 `data/raw/` guarda localmente os microdados e documentos de apoio baixados do INEP. A pasta não é versionada e, nesta etapa, deve conter apenas os anos usados na base oficial: 2009 a 2024.
 
-`data/reference/` guarda dicionários, leia-me, filtros e notas informativas pequenos que ajudam a justificar decisões metodológicas. Esses arquivos são apoio documental, não entrada direta do pipeline.
+Dentro de cada ano, usamos o padrão:
+
+```text
+data/raw/ANO/dados/
+data/raw/ANO/referencia/
+```
+
+`dados/` guarda os CSVs usados pelo pipeline. `referencia/` guarda materiais úteis para interpretação, como dicionário de dados, leia-me, nota informativa, filtros e código de país. Questionários, MD5, temporários e tabelas fora do fluxo atual foram removidos da organização local.
 
 `data/processed/oficial/` guarda as planilhas finais para análise e Power BI:
 
@@ -188,7 +196,7 @@ docs/tecnico/analise_2024.md
 
 ### `06_inventariar_bases.py`
 
-Inventaria os arquivos disponíveis em `data/raw/`, contando linhas e colunas, detectando delimitadores e comparando as colunas de cada ano com a estrutura de 2024. O script reconhece tanto o modelo novo (`MICRODADOS_CADASTRO_CURSOS` e `MICRODADOS_ED_SUP_IES`) quanto o modelo antigo (`DM_CURSO`, `SUP_CURSO`, `DM_IES`, `SUP_IES`, `DM_LOCAL_OFERTA`, `SUP_LOCAL_OFERTA`, tabelas CINE e OCDE).
+Inventaria os arquivos disponíveis em `data/raw/ANO/dados/`, contando linhas e colunas, detectando delimitadores e comparando as colunas de cada ano com a estrutura de 2024. O script reconhece tanto o modelo novo (`MICRODADOS_CADASTRO_CURSOS` e `MICRODADOS_ED_SUP_IES`) quanto o modelo antigo (`DM_CURSO`, `SUP_CURSO`, `DM_IES`, `SUP_IES`, tabelas CINE e OCDE).
 
 Arquivos gerados:
 
@@ -240,7 +248,7 @@ Base comparável: série histórica, contagem de cursos e comparação por curso
 
 ### `09_consolidar_alunos_quantitativo.py`
 
-Processa os arquivos grandes de aluno quando eles existem em `data/raw/ANO/`.
+Processa os arquivos grandes de aluno quando eles existem em `data/raw/ANO/dados/`.
 
 O script procura arquivos como `DM_ALUNO.CSV`, `SUP_ALUNO_2019.CSV` ou `MICRODADOS_CADASTRO_ALUNOS_ANO.CSV`, filtra apenas cursos de Computação/TIC pela chave `NU_ANO_CENSO + CO_IES + CO_CURSO` e agrega as situações de vínculo.
 
