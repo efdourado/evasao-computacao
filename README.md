@@ -8,6 +8,8 @@ O objetivo inicial é construir uma base consolidada sobre instituições brasil
 
 A etapa atual consiste em entender, carregar, cruzar e validar os dados dos Microdados do Censo da Educação Superior, com análise detalhada de 2024 e integração histórica oficial para 2009 a 2024.
 
+A planilha oficial começa em 2009 porque é o primeiro período em que a integração histórica fica metodologicamente compatível com o recorte adotado para Computação/TIC. Os microdados de 1995 a 2008 existem, mas usam estruturas e classificações antigas; por isso ficaram fora da base oficial atual.
+
 Foram utilizados inicialmente dois arquivos principais:
 
 * `MICRODADOS_CADASTRO_CURSOS_2024.CSV`: base de cursos superiores;
@@ -21,11 +23,13 @@ Segundo o manual dos microdados de 2024, esses arquivos são disponibilizados em
 evasao-computacao/
 ├── data/
 │   ├── raw/
+│   │   ├── 2009/
+│   │   ├── ...
 │   │   └── 2024/
-│   │       ├── MICRODADOS_CADASTRO_CURSOS_2024.CSV
-│   │       ├── MICRODADOS_ED_SUP_IES_2024.CSV
-│   │       └── MICRODADOS_LICENCIATURA.xlsx
-│   └── processed/
+│   ├── processed/
+│   │   ├── historico/
+│   │   └── oficial/
+│   └── reference/
 ├── docs/
 │   ├── 01_entendimento_dados.md
 │   ├── 02_analise_2024.md
@@ -48,6 +52,18 @@ evasao-computacao/
 ├── requirements.txt
 ├── .gitignore
 └── README.md
+```
+
+`data/raw/` guarda localmente os microdados e documentos de apoio baixados do INEP. A pasta não é versionada e, nesta etapa, deve conter apenas os anos usados na base oficial: 2009 a 2024.
+
+`data/reference/` guarda dicionários, leia-me, filtros e notas informativas pequenos que ajudam a justificar decisões metodológicas. Esses arquivos são apoio documental, não entrada direta do pipeline.
+
+`data/processed/oficial/` guarda as planilhas finais para análise e Power BI:
+
+```text
+planilha_oficial_computacao.csv
+planilha_oficial_computacao_expandida.csv
+dicionario_planilha_oficial.csv
 ```
 
 ## Configuração do ambiente
@@ -271,7 +287,7 @@ data/processed/oficial/dicionario_planilha_oficial.csv
 
 ### `13_inventariar_anos_antigos.py`
 
-Inventaria os anos 1995-2008, que usam estruturas anteriores ao recorte CINE atual. Esses anos ficam em stand-by até o mapeamento dos dicionários antigos.
+Utilitário opcional para inventariar os anos 1995-2008, caso esses microdados sejam recolocados em `data/raw/` no futuro. Esses anos usam estruturas anteriores ao recorte CINE atual e não fazem parte da planilha oficial.
 
 Arquivo gerado:
 
@@ -298,7 +314,7 @@ docs/04_estado_atual_projeto.md
 Resumo das estruturas atuais:
 
 ```text
-1995-2008: inventariado, ainda fora da planilha oficial
+1995-2008: fora da planilha oficial atual
 2009-2016: cadastro de cursos + cadastro de IES, CINE
 2017: modelo antigo, OCDE/proxy histórico
 2018-2019: modelo antigo, CINE Brasil

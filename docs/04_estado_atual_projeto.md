@@ -1,6 +1,6 @@
 # Estado atual do projeto
 
-Este é o documento principal da etapa atual. A base oficial agora cobre os anos **2009 a 2024**, com cuidado separado para os anos muito antigos, **1995 a 2008**.
+Este é o documento principal da etapa atual. A base oficial começa em **2009** e cobre os anos **2009 a 2024**.
 
 ## Objetivo atual
 
@@ -11,6 +11,14 @@ ano + instituição + curso
 ```
 
 com cursos de Computação/TIC definidos pela classificação do INEP, IES associadas e indicadores acadêmicos disponíveis em cada ano.
+
+## Por que começar em 2009
+
+A planilha oficial do projeto inicia em 2009 porque esse é o primeiro período em que a integração histórica fica metodologicamente mais compatível com o recorte oficial adotado para Computação/TIC.
+
+Embora o INEP disponibilize microdados do Censo da Educação Superior desde 1995, os anos de 1995 a 2008 usam estruturas mais antigas, com códigos e dicionários próprios, anteriores ao modelo atual baseado em CINE. Esses anos exigiriam um mapeamento específico das classificações antigas para o recorte atual de Computação/TIC.
+
+Por esse motivo, 1995 a 2008 foram analisados apenas como possibilidade histórica, mas não integram a planilha oficial neste momento. Eles permanecem como etapa futura caso seja necessário ampliar a série temporal e haja tempo para validar dicionários e equivalências de classificação.
 
 ## Recorte oficial
 
@@ -43,15 +51,9 @@ Esse é o principal cuidado metodológico de 2017: ele não é CINE, mas foi tra
 | 2017 | Integrado por OCDE/proxy histórico | Série histórica com observação metodológica |
 | 2018-2019 | Integrado por CINE Brasil no modelo antigo | Série histórica e Power BI |
 | 2020-2024 | Integrado por CINE no cadastro de cursos | Série histórica, Power BI e mapas |
-| 1995-2008 | Inventariado, ainda não integrado | Stand-by até mapear dicionários antigos |
+| 1995-2008 | Fora da base oficial atual | Possível etapa histórica futura |
 
-Os anos 1995-2008 ficaram fora da planilha oficial por enquanto porque usam estruturas anteriores ao modelo CINE atual. O inventário está em:
-
-```text
-data/processed/historico/inventario_anos_antigos_1995_2008.csv
-```
-
-Resumo desse inventário:
+Resumo da decisão sobre os anos anteriores a 2009:
 
 | Período | Observação |
 | --- | --- |
@@ -172,12 +174,13 @@ Ordem para reproduzir a etapa histórica:
 .venv/bin/python scripts/10_mesclar_evasao_historico.py
 .venv/bin/python scripts/11_auditar_recorte_computacao.py
 .venv/bin/python scripts/12_gerar_planilha_oficial.py
-.venv/bin/python scripts/13_inventariar_anos_antigos.py
 ```
+
+O script `13_inventariar_anos_antigos.py` fica como utilitário opcional caso os microdados de 1995-2008 sejam recolocados em `data/raw/` no futuro.
 
 ## Próximos passos
 
 1. Começar o Power BI pela planilha oficial comparável.
 2. Usar a planilha expandida para mapas e filtros territoriais.
-3. Decidir se vale mapear 1995-2008 agora ou deixar como etapa histórica posterior.
-4. Integrar fontes externas como e-MEC, SBC e scraper.
+3. Integrar fontes externas como e-MEC, SBC e scraper.
+4. Retomar 1995-2008 apenas se o projeto decidir ampliar a série histórica para antes de 2009.

@@ -2,6 +2,22 @@
 
 Este documento registra as decisões técnicas da integração dos microdados do INEP.
 
+## Início oficial em 2009
+
+A planilha oficial inicia em 2009 porque esse é o primeiro período em que a integração histórica se torna metodologicamente mais compatível com o recorte oficial de Computação/TIC.
+
+O recorte oficial dos anos com CINE/CINE Brasil depende de:
+
+```text
+CO_CINE_AREA_GERAL = 6
+OU
+CO_CINE_ROTULO = 0714E04
+```
+
+Os microdados de 1995 a 2008 existem, mas usam estruturas antigas, códigos próprios e dicionários anteriores à padronização atual baseada em CINE. Integrar esses anos exigiria uma etapa específica de equivalência entre classificações antigas e o recorte atual.
+
+Decisão atual: 1995-2008 não entram na planilha oficial. Esses dados foram removidos da pasta local `data/raw/` e só devem voltar se o projeto decidir fazer uma etapa histórica anterior a 2009.
+
 ## Regra de recorte
 
 Para anos com CINE/CINE Brasil:
@@ -28,9 +44,9 @@ CO_OCDE = 5.23E+06
 
 | Período | Estrutura | Classificação | Status |
 | --- | --- | --- | --- |
-| 1995-1996 | `GRADUACAO_PRESENCIAL` + `INSTITUICAO` | área antiga | inventariado, não integrado |
-| 1997-1999 | `GRADUACAO_PRESENCIAL` + `INSTITUICAO` | área antiga/campos codificados | inventariado, não integrado |
-| 2000-2008 | `GRADUACAO_PRESENCIAL`, `GRADUACAO_DISTANCIA`, `FORME`, `SECOMPLE`, `INSTITUICAO` | área antiga/campos codificados | inventariado, não integrado |
+| 1995-1996 | `GRADUACAO_PRESENCIAL` + `INSTITUICAO` | área antiga | fora da base oficial atual |
+| 1997-1999 | `GRADUACAO_PRESENCIAL` + `INSTITUICAO` | área antiga/campos codificados | fora da base oficial atual |
+| 2000-2008 | `GRADUACAO_PRESENCIAL`, `GRADUACAO_DISTANCIA`, `FORME`, `SECOMPLE`, `INSTITUICAO` | área antiga/campos codificados | fora da base oficial atual |
 | 2009-2016 | `MICRODADOS_CADASTRO_CURSOS` + `MICRODADOS_CADASTRO_IES` | CINE | integrado |
 | 2017 | `DM_CURSO`, `DM_IES`, `TB_AUX_AREA_OCDE` | OCDE | integrado com proxy |
 | 2018-2019 | `DM_CURSO`/`SUP_CURSO`, `DM_IES`/`SUP_IES`, `TB_AUX_CINE_BRASIL` | CINE Brasil | integrado |
@@ -113,16 +129,10 @@ O indicador `QT_SIT_DESVINCULADO / QT_MAT` é exploratório. Ele não deve ser a
 
 ## Anos 1995-2008
 
-Esses anos foram inventariados por:
+O script abaixo fica disponível apenas como utilitário opcional para o caso de recolocarmos os arquivos antigos em `data/raw/`:
 
 ```bash
 .venv/bin/python scripts/13_inventariar_anos_antigos.py
-```
-
-Saída:
-
-```text
-data/processed/historico/inventario_anos_antigos_1995_2008.csv
 ```
 
 Decisão atual:
@@ -141,5 +151,4 @@ Decisão atual:
 .venv/bin/python scripts/10_mesclar_evasao_historico.py
 .venv/bin/python scripts/11_auditar_recorte_computacao.py
 .venv/bin/python scripts/12_gerar_planilha_oficial.py
-.venv/bin/python scripts/13_inventariar_anos_antigos.py
 ```
