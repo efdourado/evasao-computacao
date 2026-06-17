@@ -7,10 +7,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "data" / "processed"
 OUT = PROCESSED / "resumos_2024"
-DOCS = ROOT / "docs"
+DOCS = ROOT / "docs" / "tecnico"
 
 ENTRADA = PROCESSED / "computacao_2024_tratada.csv"
-RELATORIO = DOCS / "02_analise_2024.md"
+RELATORIO = DOCS / "analise_2024.md"
 
 COLUNAS_NUMERICAS = [
     "QT_VG_TOTAL",

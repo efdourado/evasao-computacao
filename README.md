@@ -15,7 +15,7 @@ Foram utilizados inicialmente dois arquivos principais:
 * `MICRODADOS_CADASTRO_CURSOS_2024.CSV`: base de cursos superiores;
 * `MICRODADOS_ED_SUP_IES_2024.CSV`: base de Instituições de Ensino Superior (IES).
 
-Segundo o manual dos microdados de 2024, esses arquivos são disponibilizados em formato CSV, delimitados por ponto e vírgula (`;`), sendo um arquivo em nível de IES e outro em nível de curso. Os anos antigos usam estruturas diferentes, documentadas em `docs/03_integracao_historica.md`.
+Segundo o manual dos microdados de 2024, esses arquivos são disponibilizados em formato CSV, delimitados por ponto e vírgula (`;`), sendo um arquivo em nível de IES e outro em nível de curso. Os anos antigos usam estruturas diferentes, documentadas em `docs/02_decisoes_metodologicas.md`.
 
 ## Estrutura do projeto
 
@@ -31,10 +31,12 @@ evasao-computacao/
 │   │   └── oficial/
 │   └── reference/
 ├── docs/
-│   ├── 01_entendimento_dados.md
-│   ├── 02_analise_2024.md
-│   ├── 03_integracao_historica.md
-│   └── 04_estado_atual_projeto.md
+│   ├── 01_visao_geral.md
+│   ├── 02_decisoes_metodologicas.md
+│   ├── 03_pipeline_e_reproducao.md
+│   ├── 04_validacao_qualidade.md
+│   ├── 05_dicionario_planilhas_finais.md
+│   └── tecnico/
 ├── scripts/
 │   ├── 01_entender_2024.py
 │   ├── 02_abrir_base.py
@@ -48,7 +50,8 @@ evasao-computacao/
 │   ├── 10_mesclar_evasao_historico.py
 │   ├── 11_auditar_recorte_computacao.py
 │   ├── 12_gerar_planilha_oficial.py
-│   └── 13_inventariar_anos_antigos.py
+│   ├── 13_inventariar_anos_antigos.py
+│   └── 14_validar_planilha_oficial.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -180,7 +183,7 @@ data/processed/resumos_2024/resumo_por_modalidade_2024.csv
 data/processed/resumos_2024/resumo_por_cine_rotulo_2024.csv
 data/processed/resumos_2024/resumo_por_uf_curso_mapa_2024.csv
 data/processed/resumos_2024/resumo_por_ies_2024.csv
-docs/02_analise_2024.md
+docs/tecnico/analise_2024.md
 ```
 
 ### `06_inventariar_bases.py`
@@ -295,20 +298,37 @@ Arquivo gerado:
 data/processed/historico/inventario_anos_antigos_1995_2008.csv
 ```
 
+### `14_validar_planilha_oficial.py`
+
+Valida a planilha oficial antes do Power BI. O script checa duplicatas, nulos críticos, recorte oficial, métricas negativas, colunas sensíveis e consistência entre a planilha comparável e a expandida.
+
+Arquivos gerados:
+
+```text
+data/processed/validacao_oficial/01_resumo_geral.csv
+data/processed/validacao_oficial/02_duplicatas_chave.csv
+data/processed/validacao_oficial/03_nulos_colunas_criticas.csv
+data/processed/validacao_oficial/04_instituicoes_nomes_conflitantes.csv
+data/processed/validacao_oficial/05_cursos_nomes_conflitantes.csv
+data/processed/validacao_oficial/06_recorte_cine_invalido.csv
+data/processed/validacao_oficial/07_metricas_negativas_ou_estranhas.csv
+data/processed/validacao_oficial/08_colunas_sensiveis_detectadas.csv
+data/processed/validacao_oficial/09_comparacao_oficial_vs_expandida.csv
+data/processed/validacao_oficial/relatorio_validacao_oficial.md
+```
+
 ## Integração histórica
 
 Além da análise de 2024, o projeto já integra oficialmente os anos 2009 a 2024.
 
-Documento principal:
+Documentos principais:
 
 ```text
-docs/03_integracao_historica.md
-```
-
-Síntese para reunião:
-
-```text
-docs/04_estado_atual_projeto.md
+docs/01_visao_geral.md
+docs/02_decisoes_metodologicas.md
+docs/03_pipeline_e_reproducao.md
+docs/04_validacao_qualidade.md
+docs/05_dicionario_planilhas_finais.md
 ```
 
 Resumo das estruturas atuais:
@@ -349,8 +369,8 @@ Nos anos com a coluna disponível, o pipeline filtra graduação por `TP_NIVEL_A
 A lista detalhada de validações e candidatos fora do recorte oficial está documentada em:
 
 ```text
-docs/03_integracao_historica.md
-docs/04_estado_atual_projeto.md
+docs/02_decisoes_metodologicas.md
+docs/04_validacao_qualidade.md
 ```
 
 ## Resultados preliminares de 2024
