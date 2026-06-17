@@ -2,9 +2,9 @@
 
 ## Contexto
 
-O projeto utiliza os Microdados do Censo da Educação Superior para mapear cursos superiores de Computação no Brasil. A primeira etapa está focada no ano de 2024, com posterior expansão para anos anteriores.
+O projeto utiliza os Microdados do Censo da Educação Superior para mapear cursos superiores de Computação no Brasil. A primeira etapa detalhou 2024; a integração histórica oficial agora cobre 2009 a 2024, documentada em `docs/03_integracao_historica.md` e `docs/04_estado_atual_projeto.md`.
 
-O professor compartilhou pastas com dados de diferentes anos, incluindo 2017, 2018, 2019, 2022 e 2024. Cada pasta contém, em geral:
+O professor compartilhou pastas com dados de diferentes anos. Cada pasta pode conter, conforme o período:
 
 * dados;
 * leia-me;

@@ -6,14 +6,14 @@ O objetivo inicial é construir uma base consolidada sobre instituições brasil
 
 ## Objetivo da etapa atual
 
-A etapa atual consiste em entender, carregar, cruzar e validar os dados dos Microdados do Censo da Educação Superior, com análise detalhada de 2024 e integração histórica inicial para 2017, 2018, 2019, 2022 e 2024.
+A etapa atual consiste em entender, carregar, cruzar e validar os dados dos Microdados do Censo da Educação Superior, com análise detalhada de 2024 e integração histórica oficial para 2009 a 2024.
 
 Foram utilizados inicialmente dois arquivos principais:
 
 * `MICRODADOS_CADASTRO_CURSOS_2024.CSV`: base de cursos superiores;
 * `MICRODADOS_ED_SUP_IES_2024.CSV`: base de Instituições de Ensino Superior (IES).
 
-Segundo o manual dos microdados de 2024, esses arquivos são disponibilizados em formato CSV, delimitados por ponto e vírgula (`;`), sendo um arquivo em nível de IES e outro em nível de curso. Os anos antigos usam estrutura diferente, documentada em `docs/03_integracao_historica.md`.
+Segundo o manual dos microdados de 2024, esses arquivos são disponibilizados em formato CSV, delimitados por ponto e vírgula (`;`), sendo um arquivo em nível de IES e outro em nível de curso. Os anos antigos usam estruturas diferentes, documentadas em `docs/03_integracao_historica.md`.
 
 ## Estrutura do projeto
 
@@ -43,7 +43,8 @@ evasao-computacao/
 │   ├── 09_consolidar_alunos_quantitativo.py
 │   ├── 10_mesclar_evasao_historico.py
 │   ├── 11_auditar_recorte_computacao.py
-│   └── 12_gerar_planilha_oficial.py
+│   ├── 12_gerar_planilha_oficial.py
+│   └── 13_inventariar_anos_antigos.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -181,6 +182,12 @@ data/processed/comparacao_colunas_raw.csv
 
 Gera a base histórica expandida de cursos de Computação/TIC usando os anos disponíveis em `data/raw/`.
 
+O recorte oficial inclui:
+
+* `CO_CINE_AREA_GERAL = 6` nos anos com CINE/CINE Brasil;
+* `CO_CINE_ROTULO = 0714E04` para incluir Engenharia de Computação;
+* em 2017, `CO_OCDE_AREA_ESPECIFICA = 48` e `CO_OCDE = 5.23E+06` como aproximação histórica.
+
 Arquivos gerados:
 
 ```text
@@ -188,7 +195,7 @@ data/processed/historico/computacao_historico_cursos.csv
 data/processed/historico/resumo_historico_por_ano.csv
 ```
 
-Essa base é indicada para mapa, dimensão geográfica, filtros e análises dinâmicas. Nos anos antigos, os indicadores de desvinculação/trancamento não vêm no arquivo de curso; eles são reconstruídos a partir dos arquivos de aluno pelos scripts `09` e `10`.
+Essa base é indicada para mapa, dimensão geográfica, filtros e análises dinâmicas. Nos anos 2017-2019, os indicadores de desvinculação/trancamento são reconstruídos a partir dos arquivos de aluno pelos scripts `09` e `10`.
 
 ### `08_validar_historico.py`
 
@@ -226,7 +233,7 @@ data/processed/historico/alunos_computacao_quantitativo.csv
 
 ### `10_mesclar_evasao_historico.py`
 
-Mescla a base comparável de cursos com os quantitativos derivados dos arquivos de aluno. A ideia é preencher situação acadêmica de 2017-2019 quando os arquivos de aluno forem processados, mantendo os agregados oficiais já existentes em 2022/2024.
+Mescla a base comparável de cursos com os quantitativos derivados dos arquivos de aluno. A ideia é preencher situação acadêmica de 2017-2019 quando os arquivos de aluno forem processados, mantendo os agregados oficiais já existentes nos cadastros de curso dos demais anos.
 
 Arquivos gerados:
 
@@ -262,9 +269,19 @@ data/processed/oficial/planilha_oficial_computacao_expandida.csv
 data/processed/oficial/dicionario_planilha_oficial.csv
 ```
 
+### `13_inventariar_anos_antigos.py`
+
+Inventaria os anos 1995-2008, que usam estruturas anteriores ao recorte CINE atual. Esses anos ficam em stand-by até o mapeamento dos dicionários antigos.
+
+Arquivo gerado:
+
+```text
+data/processed/historico/inventario_anos_antigos_1995_2008.csv
+```
+
 ## Integração histórica
 
-Além da análise de 2024, o projeto já possui uma estratégia inicial para integrar 2017, 2018, 2019, 2022 e 2024.
+Além da análise de 2024, o projeto já integra oficialmente os anos 2009 a 2024.
 
 Documento principal:
 
@@ -278,14 +295,14 @@ Síntese para reunião:
 docs/04_estado_atual_projeto.md
 ```
 
-Resumo das estruturas:
+Resumo das estruturas atuais:
 
 ```text
-2017: modelo antigo, OCDE, DM_CURSO/DM_IES/DM_LOCAL_OFERTA
-2018: modelo antigo, CINE Brasil, DM_CURSO/DM_IES/DM_LOCAL_OFERTA
-2019: modelo antigo, CINE Brasil, SUP_CURSO/SUP_IES/SUP_LOCAL_OFERTA
-2022: modelo novo, CINE, cursos + IES
-2024: modelo novo, CINE, cursos + IES
+1995-2008: inventariado, ainda fora da planilha oficial
+2009-2016: cadastro de cursos + cadastro de IES, CINE
+2017: modelo antigo, OCDE/proxy histórico
+2018-2019: modelo antigo, CINE Brasil
+2020-2024: cadastro de cursos + IES, CINE
 ```
 
 Os arquivos de aluno (`DM_ALUNO`/`SUP_ALUNO_2019`) não são necessários para montar o panorama histórico por curso e IES, mas são importantes para aprofundar a análise de situação de vínculo/evasão nos anos antigos. Os scripts `09` e `10` já processaram 2017, 2018 e 2019.
@@ -304,12 +321,12 @@ A primeira é expandida por localização/dimensão e deve alimentar mapas. A se
 O filtro principal usa a classificação oficial CINE/CINE Brasil.
 
 ```text
-2022/2024: CO_CINE_AREA_GERAL = 6 ou CO_CINE_ROTULO = 0714E04.
+2009-2016 e 2020-2024: CO_CINE_AREA_GERAL = 6 ou CO_CINE_ROTULO = 0714E04.
 2018/2019: CO_CINE_AREA_GERAL = 06 ou CO_CINE_ROTULO = 0714E04.
 2017: CO_OCDE_AREA_ESPECIFICA = 48 ou CO_OCDE = 5.23E+06.
 ```
 
-Em todos os anos antigos, o pipeline filtra graduação por `TP_NIVEL_ACADEMICO = 1` e exclui ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes.
+Nos anos com a coluna disponível, o pipeline filtra graduação por `TP_NIVEL_ACADEMICO = 1` e exclui ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes.
 
 `0714E04` é o rótulo CINE de Engenharia de Computação. Em 2017, `5.23E+06` funciona como aproximação histórica no padrão OCDE.
 

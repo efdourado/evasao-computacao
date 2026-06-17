@@ -14,6 +14,21 @@ SAIDA_RESUMO_ANO = OUT / "resumo_historico_por_ano.csv"
 DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 ROTULO_ENGENHARIA_COMPUTACAO = "0714E04"
 OCDE_PROXY_ENGENHARIA_COMPUTACAO = "5.23E+06"
+ANOS_CADASTRO_CINE = [
+    "2009",
+    "2010",
+    "2011",
+    "2012",
+    "2013",
+    "2014",
+    "2015",
+    "2016",
+    "2020",
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+]
 
 MAPA_UF = {
     "11": "RO",
@@ -82,6 +97,8 @@ COLUNAS_SAIDA = [
     "NU_ANO_CENSO",
     "DS_MODELO_DADOS",
     "DS_CLASSIFICACAO_AREA",
+    "DS_NIVEL_COMPARABILIDADE",
+    "DS_OBSERVACAO_COMPARABILIDADE",
     "CO_IES",
     "NO_IES",
     "SG_IES",
@@ -155,6 +172,35 @@ def read_csv(caminho, usecols=None):
     )
 
 
+def colunas_csv(caminho):
+    return pd.read_csv(
+        caminho,
+        sep=detectar_delimitador(caminho),
+        encoding="latin1",
+        dtype=str,
+        nrows=0,
+    ).columns.tolist()
+
+
+def read_csv_disponivel(caminho, colunas_desejadas):
+    colunas_disponiveis = colunas_csv(caminho)
+    usecols = [coluna for coluna in colunas_desejadas if coluna in colunas_disponiveis]
+    return read_csv(caminho, usecols=usecols)
+
+
+def encontrar_arquivo(ano, nomes):
+    pasta_ano = RAW / str(ano)
+    if not pasta_ano.exists():
+        return None
+
+    nomes_normalizados = {nome.upper() for nome in nomes}
+    for caminho in sorted(pasta_ano.rglob("*.CSV")) + sorted(pasta_ano.rglob("*.csv")):
+        if caminho.name.upper() in nomes_normalizados:
+            return caminho
+
+    return None
+
+
 def limpar_codigo(serie):
     return serie.fillna("").str.replace('"', "", regex=False).str.strip().str.upper()
 
@@ -164,8 +210,18 @@ def normalizar(serie):
 
 
 def filtro_graduacao_sem_abi(df):
-    nivel = df.get("TP_NIVEL_ACADEMICO", pd.Series("", index=df.index)).fillna("")
-    atributo = df.get("TP_ATRIBUTO_INGRESSO", pd.Series("", index=df.index)).fillna("")
+    nivel = (
+        df.get("TP_NIVEL_ACADEMICO", pd.Series("", index=df.index))
+        .fillna("")
+        .astype(str)
+        .str.strip()
+    )
+    atributo = (
+        df.get("TP_ATRIBUTO_INGRESSO", pd.Series("", index=df.index))
+        .fillna("")
+        .astype(str)
+        .str.strip()
+    )
     return nivel.eq("1") & ~atributo.eq("1")
 
 
@@ -219,14 +275,21 @@ def finalizar(df):
 
 
 def processar_ano_novo(ano):
-    arq_cursos = RAW / ano / f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"
-    arq_ies = RAW / ano / f"MICRODADOS_ED_SUP_IES_{ano}.CSV"
+    ano = str(ano)
+    arq_cursos = encontrar_arquivo(ano, [f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"])
+    arq_ies = encontrar_arquivo(
+        ano,
+        [
+            f"MICRODADOS_ED_SUP_IES_{ano}.CSV",
+            f"MICRODADOS_CADASTRO_IES_{ano}.CSV",
+        ],
+    )
 
-    if not arq_cursos.exists():
-        print(f"[{ano}] Arquivo não encontrado: {arq_cursos}")
+    if arq_cursos is None:
+        print(f"[{ano}] Arquivo de cursos não encontrado.")
         return pd.DataFrame()
-    if not arq_ies.exists():
-        print(f"[{ano}] Arquivo não encontrado: {arq_ies}")
+    if arq_ies is None:
+        print(f"[{ano}] Arquivo de IES não encontrado.")
         return pd.DataFrame()
 
     cols_cursos = [
@@ -236,6 +299,7 @@ def processar_ano_novo(ano):
         "NO_CURSO",
         "NO_CINE_ROTULO",
         "CO_CINE_ROTULO",
+        "CO_CINE_ROTULO2",
         "CO_CINE_AREA_GERAL",
         "NO_CINE_AREA_GERAL",
         "CO_CINE_AREA_ESPECIFICA",
@@ -248,8 +312,12 @@ def processar_ano_novo(ano):
         "TP_REDE",
         "TP_CATEGORIA_ADMINISTRATIVA",
         "TP_ORGANIZACAO_ACADEMICA",
+        "TP_NIVEL_ACADEMICO",
+        "TP_ATRIBUTO_INGRESSO",
         "NO_REGIAO",
+        "CO_UF",
         "SG_UF",
+        "CO_MUNICIPIO",
         "NO_MUNICIPIO",
         "QT_VG_TOTAL",
         "QT_INSCRITO_TOTAL",
@@ -261,20 +329,24 @@ def processar_ano_novo(ano):
         "QT_SIT_TRANSFERIDO",
         "QT_SIT_FALECIDO",
     ]
-    cursos = read_csv(arq_cursos, usecols=cols_cursos)
+    cursos = read_csv_disponivel(arq_cursos, cols_cursos)
+    for col in cols_cursos:
+        if col not in cursos.columns:
+            cursos[col] = pd.NA
 
-    ies_cols_disponiveis = read_csv(arq_ies, usecols=None).columns.tolist()
-    cols_ies = [
-        col
-        for col in [
-            "NU_ANO_CENSO",
-            "CO_IES",
-            "NO_IES",
-            "SG_IES",
+    if "CO_CINE_ROTULO2" in cursos.columns:
+        sem_rotulo = cursos["CO_CINE_ROTULO"].isna() | cursos["CO_CINE_ROTULO"].eq("")
+        cursos.loc[sem_rotulo, "CO_CINE_ROTULO"] = cursos.loc[
+            sem_rotulo, "CO_CINE_ROTULO2"
         ]
-        if col in ies_cols_disponiveis
-    ]
-    ies = read_csv(arq_ies, usecols=cols_ies)
+
+    cursos = cursos[filtro_graduacao_sem_abi(cursos)].copy()
+
+    cols_ies = ["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"]
+    ies = read_csv_disponivel(arq_ies, cols_ies)
+    for col in cols_ies:
+        if col not in ies.columns:
+            ies[col] = pd.NA
 
     for col in [
         "CO_CINE_ROTULO",
@@ -296,8 +368,12 @@ def processar_ano_novo(ano):
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
-    base["DS_MODELO_DADOS"] = "novo"
+    base["DS_MODELO_DADOS"] = "cadastro_cursos"
     base["DS_CLASSIFICACAO_AREA"] = "CINE"
+    base["DS_NIVEL_COMPARABILIDADE"] = "alta_cine"
+    base["DS_OBSERVACAO_COMPARABILIDADE"] = (
+        "Recorte oficial por CINE area geral 6 ou rotulo 0714E04."
+    )
     base["CO_AREA_GERAL"] = base["CO_CINE_AREA_GERAL"]
     base["NO_AREA_GERAL"] = base["NO_CINE_AREA_GERAL"]
     base["CO_AREA_ESPECIFICA"] = base["CO_CINE_AREA_ESPECIFICA"]
@@ -306,7 +382,6 @@ def processar_ano_novo(ano):
     base["NO_AREA_DETALHADA"] = base["NO_CINE_AREA_DETALHADA"]
     base["CO_ROTULO_AREA"] = base["CO_CINE_ROTULO"]
     base["NO_ROTULO_AREA"] = base["NO_CINE_ROTULO"]
-    base["CO_UF"] = pd.NA
     mapa_dimensao = {
         "1": "Presencial no Brasil",
         "2": "EaD no Brasil",
@@ -385,6 +460,10 @@ def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
 
     base["DS_MODELO_DADOS"] = "antigo"
     base["DS_CLASSIFICACAO_AREA"] = "CINE Brasil"
+    base["DS_NIVEL_COMPARABILIDADE"] = "alta_cine_brasil_modelo_antigo"
+    base["DS_OBSERVACAO_COMPARABILIDADE"] = (
+        "Recorte oficial por CINE Brasil area geral 6 ou rotulo 0714E04."
+    )
     base["CO_AREA_GERAL"] = limpar_codigo(base["CO_CINE_AREA_GERAL"])
     base["NO_AREA_GERAL"] = base["NO_CINE_AREA_GERAL"]
     base["CO_AREA_ESPECIFICA"] = base["CO_CINE_AREA_ESPECIFICA"]
@@ -486,6 +565,11 @@ def processar_ano_ocde_2017():
 
     base["DS_MODELO_DADOS"] = "antigo"
     base["DS_CLASSIFICACAO_AREA"] = "OCDE"
+    base["DS_NIVEL_COMPARABILIDADE"] = "media_ocde_proxy"
+    base["DS_OBSERVACAO_COMPARABILIDADE"] = (
+        "2017 nao possui CINE; usa OCDE area especifica 48 e proxy "
+        "5.23E+06 para Engenharia/Computacao."
+    )
     base["CO_AREA_GERAL"] = base["CO_OCDE_AREA_GERAL"]
     base["NO_AREA_GERAL"] = base["NO_OCDE_AREA_GERAL"]
     base["CO_AREA_ESPECIFICA"] = base["CO_OCDE_AREA_ESPECIFICA"]
@@ -546,26 +630,30 @@ def gerar_resumo(base):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
 
-    partes = [
-        processar_ano_ocde_2017(),
-        processar_ano_cine_antigo(
-            "2018",
-            RAW / "2018" / "DM_CURSO.CSV",
-            RAW / "2018" / "DM_IES.CSV",
-            RAW / "2018" / "TB_AUX_CINE_BRASIL.CSV",
-        ),
-        processar_ano_cine_antigo(
-            "2019",
-            RAW / "2019" / "SUP_CURSO_2019.CSV",
-            RAW / "2019" / "SUP_IES_2019.CSV",
-            RAW / "2019" / "TB_AUX_CINE_BRASIL_2019.CSV",
-        ),
-        processar_ano_novo("2022"),
-        processar_ano_novo("2024"),
-    ]
+    partes = [processar_ano_novo(ano) for ano in ANOS_CADASTRO_CINE if ano < "2017"]
+    partes.extend(
+        [
+            processar_ano_ocde_2017(),
+            processar_ano_cine_antigo(
+                "2018",
+                RAW / "2018" / "DM_CURSO.CSV",
+                RAW / "2018" / "DM_IES.CSV",
+                RAW / "2018" / "TB_AUX_CINE_BRASIL.CSV",
+            ),
+            processar_ano_cine_antigo(
+                "2019",
+                RAW / "2019" / "SUP_CURSO_2019.CSV",
+                RAW / "2019" / "SUP_IES_2019.CSV",
+                RAW / "2019" / "TB_AUX_CINE_BRASIL_2019.CSV",
+            ),
+        ]
+    )
+    partes.extend(
+        processar_ano_novo(ano) for ano in ANOS_CADASTRO_CINE if ano > "2019"
+    )
 
     partes_validas = [p for p in partes if not p.empty]
-    
+
     if not partes_validas:
         print("Erro: Nenhum arquivo de curso foi encontrado em data/raw para consolidar.")
         return

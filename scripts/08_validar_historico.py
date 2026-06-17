@@ -32,6 +32,8 @@ NUMERICAS = [
 COLUNAS_IDENTIFICACAO = [
     "DS_MODELO_DADOS",
     "DS_CLASSIFICACAO_AREA",
+    "DS_NIVEL_COMPARABILIDADE",
+    "DS_OBSERVACAO_COMPARABILIDADE",
     "NO_IES",
     "SG_IES",
     "NO_CURSO",
@@ -168,9 +170,9 @@ def carregar_base_expandida():
 def gerar_linhas_por_curso(base):
     metricas = metricas_disponiveis(base)
     agregacoes = {
-        "NO_IES": ("NO_IES", primeiro_valido),
-        "NO_CURSO": ("NO_CURSO", primeiro_valido),
-        "DS_TP_MODALIDADE_ENSINO": ("DS_TP_MODALIDADE_ENSINO", primeiro_valido),
+        "NO_IES": ("NO_IES", "first"),
+        "NO_CURSO": ("NO_CURSO", "first"),
+        "DS_TP_MODALIDADE_ENSINO": ("DS_TP_MODALIDADE_ENSINO", "first"),
         "QT_LINHAS_POR_CURSO": ("CO_CURSO", "size"),
         "QT_UFS_DISTINTAS": ("SG_UF", contar_unicos),
         "SG_UF_LISTA": ("SG_UF", valores_unicos),
@@ -211,7 +213,7 @@ def gerar_linhas_por_curso(base):
 def gerar_base_comparavel(base):
     metricas = metricas_disponiveis(base)
     agregacoes = {
-        coluna: (coluna, primeiro_valido)
+        coluna: (coluna, "first")
         for coluna in COLUNAS_IDENTIFICACAO
         if coluna in base.columns
     }

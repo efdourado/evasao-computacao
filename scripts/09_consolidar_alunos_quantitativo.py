@@ -10,7 +10,6 @@ HISTORICO = ROOT / "data" / "processed" / "historico"
 BASE_CURSOS = HISTORICO / "computacao_historico_cursos_comparavel.csv"
 SAIDA_ALUNOS = HISTORICO / "alunos_computacao_quantitativo.csv"
 
-ANOS_ALVO = ["2017", "2018", "2019", "2022", "2024"]
 CHAVE_CURSO = ["NU_ANO_CENSO", "CO_IES", "CO_CURSO"]
 DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 
@@ -211,9 +210,10 @@ def main():
     cursos = pd.read_csv(BASE_CURSOS, sep=";", encoding="utf-8-sig", dtype=str)
     cursos_validos = cursos[CHAVE_CURSO].dropna().drop_duplicates()
     normalizar_chaves(cursos_validos, CHAVE_CURSO)
+    anos_alvo = sorted(cursos_validos["NU_ANO_CENSO"].dropna().unique())
 
     resultados = []
-    for ano in ANOS_ALVO:
+    for ano in anos_alvo:
         resultado_ano = processar_ano_aluno(ano, cursos_validos)
         if not resultado_ano.empty:
             resultados.append(resultado_ano)

@@ -84,6 +84,19 @@ def read_csv_disponivel(caminho, colunas_desejadas=None):
     )
 
 
+def encontrar_arquivo(ano, nomes):
+    pasta_ano = RAW / str(ano)
+    if not pasta_ano.exists():
+        return None
+
+    nomes_normalizados = {nome.upper() for nome in nomes}
+    for caminho in sorted(pasta_ano.rglob("*.CSV")) + sorted(pasta_ano.rglob("*.csv")):
+        if caminho.name.upper() in nomes_normalizados:
+            return caminho
+
+    return None
+
+
 def filtro_graduacao_sem_abi(df):
     if "TP_NIVEL_ACADEMICO" in df.columns:
         nivel = df["TP_NIVEL_ACADEMICO"].fillna("").astype(str).str.strip()
@@ -160,13 +173,17 @@ def marcar_candidatos(df, incluido):
 
 
 def cursos_novos(ano):
-    caminho = RAW / ano / f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"
+    caminho = encontrar_arquivo(ano, [f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"])
+    if caminho is None:
+        return pd.DataFrame()
+
     colunas = [
         "NU_ANO_CENSO",
         "CO_IES",
         "CO_CURSO",
         "NO_CURSO",
         "CO_CINE_ROTULO",
+        "CO_CINE_ROTULO2",
         "NO_CINE_ROTULO",
         "CO_CINE_AREA_GERAL",
         "NO_CINE_AREA_GERAL",
@@ -177,7 +194,15 @@ def cursos_novos(ano):
         "TP_NIVEL_ACADEMICO",
         "TP_ATRIBUTO_INGRESSO",
     ]
-    return read_csv_disponivel(caminho, colunas)
+    cursos = read_csv_disponivel(caminho, colunas)
+    if "CO_CINE_ROTULO" not in cursos.columns:
+        cursos["CO_CINE_ROTULO"] = pd.NA
+    if "CO_CINE_ROTULO2" in cursos.columns:
+        sem_rotulo = cursos["CO_CINE_ROTULO"].isna() | cursos["CO_CINE_ROTULO"].eq("")
+        cursos.loc[sem_rotulo, "CO_CINE_ROTULO"] = cursos.loc[
+            sem_rotulo, "CO_CINE_ROTULO2"
+        ]
+    return cursos[filtro_graduacao_sem_abi(cursos)].copy()
 
 
 def cursos_cine_antigo(ano, caminho_curso, caminho_cine):
@@ -235,6 +260,16 @@ def cursos_ocde_2017():
 
 def auditar():
     incluidos = carregar_chaves_incluidas()
+    anos_cadastro = []
+    for pasta in sorted(RAW.iterdir()):
+        if not pasta.is_dir() or not pasta.name.isdigit():
+            continue
+        ano = pasta.name
+        if ano in ["2017", "2018", "2019"]:
+            continue
+        if encontrar_arquivo(ano, [f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"]):
+            anos_cadastro.append(ano)
+
     partes = [
         cursos_ocde_2017(),
         cursos_cine_antigo(
@@ -247,9 +282,8 @@ def auditar():
             RAW / "2019" / "SUP_CURSO_2019.CSV",
             RAW / "2019" / "TB_AUX_CINE_BRASIL_2019.CSV",
         ),
-        cursos_novos("2022"),
-        cursos_novos("2024"),
     ]
+    partes.extend(cursos_novos(ano) for ano in anos_cadastro)
 
     candidatos = [marcar_candidatos(parte, incluidos) for parte in partes]
     candidatos = [parte for parte in candidatos if not parte.empty]
