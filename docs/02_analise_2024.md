@@ -12,33 +12,36 @@ Ela foi gerada a partir dos Microdados do Censo da Educação Superior 2024 do I
 
 ## Recorte usado
 
-O recorte oficial de Computação/TIC inclui cursos na área geral 6 da CINE, isto é, Computação e Tecnologias da Informação e Comunicação (TIC).
+O recorte oficial inclui:
 
-Cursos relacionados que estejam em outras áreas gerais, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional e Informática em Saúde, não entram automaticamente nessa base. Eles ficam para revisão na auditoria do recorte.
+1. cursos na área geral 6 da CINE, isto é, Computação e Tecnologias da Informação e Comunicação (TIC);
+2. cursos com `CO_CINE_ROTULO = 0714E04`, rótulo de Engenharia de Computação.
+
+Cursos relacionados fora desses critérios, como Matemática Computacional, Física Computacional e Informática em Saúde, ficam para revisão na auditoria do recorte.
 
 ## Números principais
 
 ```text
-Registros analisados: 73.134
-Cursos distintos: 3.540
-IES distintas: 943
-Registros com uso em mapa municipal: 71.842
-Registros sem uso em mapa municipal: 1.292
+Registros analisados: 76.865
+Cursos distintos: 3.894
+IES distintas: 977
+Registros com uso em mapa municipal: 75.509
+Registros sem uso em mapa municipal: 1.356
 ```
 
 Indicadores agregados:
 
 ```text
-Vagas: 2.641.395
-Inscritos: 1.423.984
-Ingressantes: 489.067
-Matriculados: 800.222
-Concluintes: 100.488
-Matrículas trancadas: 179.110
-Desvinculados: 302.613
-Transferidos: 19.763
-Falecidos: 74
-Desvinculados/matriculados: 37,82%
+Vagas: 2.739.900
+Inscritos: 1.513.815
+Ingressantes: 509.828
+Matriculados: 860.791
+Concluintes: 106.157
+Matrículas trancadas: 188.392
+Desvinculados: 315.838
+Transferidos: 23.294
+Falecidos: 84
+Desvinculados/matriculados: 36,69%
 ```
 
 O indicador `Desvinculados/matriculados` deve ser tratado como medida exploratória, não como taxa final de evasão, porque a metodologia definitiva ainda depende da modelagem histórica e da validação conceitual do projeto.
@@ -47,17 +50,17 @@ O indicador `Desvinculados/matriculados` deve ser tratado como medida explorató
 
 | TP_DIMENSAO | DS_TP_DIMENSAO | QT_REGISTROS | QT_CURSOS_DISTINTOS | QT_MAT | QT_SIT_DESVINCULADO |
 | --- | --- | --- | --- | --- | --- |
-| 2 | EaD no Brasil | 69.541 | 1.234 | 483.835 | 229.305 |
-| 1 | Presencial no Brasil | 2.301 | 2.301 | 315.965 | 73.202 |
-| 4 | EaD exterior | 53 | 53 | 422 | 106 |
-| 3 | EaD somente nível Brasil | 1.239 | 1.239 | 0 | 0 |
+| 2 | EaD no Brasil | 72.915 | 1.295 | 503.197 | 235.305 |
+| 1 | Presencial no Brasil | 2.594 | 2.594 | 357.156 | 80.422 |
+| 4 | EaD exterior | 56 | 56 | 438 | 111 |
+| 3 | EaD somente nível Brasil | 1.300 | 1.300 | 0 | 0 |
 
 ## Distribuição por modalidade
 
 | DS_TP_MODALIDADE_ENSINO | QT_REGISTROS | QT_CURSOS_DISTINTOS | QT_MAT | QT_SIT_DESVINCULADO |
 | --- | --- | --- | --- | --- |
-| EaD | 70.833 | 1.239 | 484.257 | 229.411 |
-| Presencial | 2.301 | 2.301 | 315.965 | 73.202 |
+| EaD | 74.271 | 1.300 | 503.635 | 235.416 |
+| Presencial | 2.594 | 2.594 | 357.156 | 80.422 |
 
 ## Principais rótulos CINE por matrículas
 
@@ -66,6 +69,7 @@ O indicador `Desvinculados/matriculados` deve ser tratado como medida explorató
 | Sistemas de informação | 20.334 | 1.500 | 420.479 | 160.022 |
 | Ciência da computação | 5.695 | 507 | 127.190 | 33.253 |
 | Engenharia de software | 7.807 | 213 | 69.832 | 24.063 |
+| Engenharia de computação | 3.731 | 354 | 60.569 | 13.225 |
 | Gestão da tecnologia da informação | 9.178 | 330 | 59.647 | 34.546 |
 | Ciência de dados | 5.005 | 130 | 28.189 | 10.937 |
 | Redes de computadores | 5.125 | 198 | 20.661 | 9.949 |
@@ -77,7 +81,6 @@ O indicador `Desvinculados/matriculados` deve ser tratado como medida explorató
 | Banco de dados | 2.817 | 75 | 7.270 | 4.045 |
 | Inteligência artificial | 1.222 | 31 | 3.250 | 1.132 |
 | Criação digital | 7 | 7 | 1.286 | 233 |
-| Agrocomputação | 542 | 12 | 1.269 | 679 |
 
 ## Principais UFs para mapa municipal
 
@@ -85,21 +88,21 @@ Esta tabela considera apenas registros com `IN_USAR_MAPA_MUNICIPAL = True`.
 
 | SG_UF | QT_REGISTROS | QT_CURSOS_DISTINTOS | QT_MAT | QT_SIT_DESVINCULADO |
 | --- | --- | --- | --- | --- |
-| SP | 17.447 | 1.450 | 265.694 | 101.421 |
-| RJ | 4.483 | 681 | 67.908 | 27.014 |
-| MG | 7.853 | 815 | 65.958 | 24.410 |
-| PR | 5.241 | 693 | 55.298 | 20.563 |
-| RS | 5.706 | 692 | 44.838 | 17.223 |
-| DF | 501 | 501 | 35.704 | 12.088 |
-| SC | 4.153 | 604 | 34.150 | 14.239 |
-| PE | 2.517 | 502 | 32.079 | 10.169 |
-| CE | 2.364 | 493 | 29.272 | 10.375 |
-| BA | 3.814 | 549 | 25.238 | 9.953 |
-| GO | 2.584 | 513 | 21.202 | 8.910 |
-| PB | 1.138 | 376 | 15.235 | 4.492 |
-| PA | 2.349 | 439 | 13.429 | 5.580 |
-| ES | 1.576 | 381 | 13.409 | 5.447 |
-| AM | 805 | 374 | 11.658 | 4.939 |
+| SP | 18.688 | 1.589 | 290.048 | 106.466 |
+| MG | 8.248 | 881 | 72.189 | 25.615 |
+| RJ | 4.691 | 724 | 71.831 | 27.929 |
+| PR | 5.602 | 735 | 59.150 | 21.589 |
+| RS | 5.959 | 741 | 47.659 | 17.946 |
+| DF | 520 | 520 | 36.701 | 12.278 |
+| SC | 4.323 | 640 | 35.486 | 14.661 |
+| PE | 2.591 | 524 | 33.732 | 10.463 |
+| CE | 2.432 | 521 | 31.325 | 10.711 |
+| BA | 3.975 | 590 | 27.560 | 10.608 |
+| GO | 2.679 | 541 | 22.261 | 9.150 |
+| PB | 1.172 | 389 | 16.057 | 4.602 |
+| PA | 2.465 | 463 | 14.944 | 6.013 |
+| ES | 1.646 | 407 | 14.615 | 5.764 |
+| AM | 843 | 399 | 13.676 | 5.270 |
 
 ## Tabelas geradas
 

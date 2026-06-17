@@ -12,6 +12,8 @@ SAIDA_BASE = OUT / "computacao_historico_cursos.csv"
 SAIDA_RESUMO_ANO = OUT / "resumo_historico_por_ano.csv"
 
 DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
+ROTULO_ENGENHARIA_COMPUTACAO = "0714E04"
+OCDE_PROXY_ENGENHARIA_COMPUTACAO = "5.23E+06"
 
 MAPA_UF = {
     "11": "RO",
@@ -154,7 +156,7 @@ def read_csv(caminho, usecols=None):
 
 
 def limpar_codigo(serie):
-    return serie.fillna("").str.replace('"', "", regex=False).str.strip()
+    return serie.fillna("").str.replace('"', "", regex=False).str.strip().str.upper()
 
 
 def normalizar(serie):
@@ -283,9 +285,14 @@ def processar_ano_novo(ano):
         cursos[col] = limpar_codigo(cursos[col])
 
     filtro_area = cursos["CO_CINE_AREA_GERAL"].isin(["6", "06"])
+    filtro_eng = cursos["CO_CINE_ROTULO"].eq(ROTULO_ENGENHARIA_COMPUTACAO)
 
-    base = cursos[filtro_area].copy()
+    base = cursos[filtro_area | filtro_eng].copy()
     base["DS_CRITERIO_ESCOPO"] = "CINE área geral 6 Computação/TIC"
+    base.loc[
+        filtro_eng.loc[base.index] & ~filtro_area.loc[base.index],
+        "DS_CRITERIO_ESCOPO",
+    ] = "CINE rótulo 0714E04 Engenharia de Computação"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
@@ -365,9 +372,14 @@ def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
 
     base = cursos.merge(cine, on="CO_CINE_ROTULO", how="left")
     filtro_area = limpar_codigo(base["CO_CINE_AREA_GERAL"]).isin(["6", "06"])
+    filtro_eng = base["CO_CINE_ROTULO"].eq(ROTULO_ENGENHARIA_COMPUTACAO)
 
-    base = base[filtro_graduacao_sem_abi(base) & filtro_area].copy()
+    base = base[filtro_graduacao_sem_abi(base) & (filtro_area | filtro_eng)].copy()
     base["DS_CRITERIO_ESCOPO"] = "CINE Brasil área geral 6 Computação/TIC"
+    base.loc[
+        filtro_eng.loc[base.index] & ~filtro_area.loc[base.index],
+        "DS_CRITERIO_ESCOPO",
+    ] = "CINE Brasil rótulo 0714E04 Engenharia de Computação"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
@@ -461,9 +473,14 @@ def processar_ano_ocde_2017():
     )
 
     filtro_area = base["CO_OCDE_AREA_ESPECIFICA"].eq("48")
+    filtro_eng = limpar_codigo(base["CO_OCDE"]).eq(OCDE_PROXY_ENGENHARIA_COMPUTACAO)
 
-    base = base[filtro_graduacao_sem_abi(base) & filtro_area].copy()
+    base = base[filtro_graduacao_sem_abi(base) & (filtro_area | filtro_eng)].copy()
     base["DS_CRITERIO_ESCOPO"] = "OCDE área específica 48 Computação"
+    base.loc[
+        filtro_eng.loc[base.index] & ~filtro_area.loc[base.index],
+        "DS_CRITERIO_ESCOPO",
+    ] = "OCDE proxy 5.23E+06 Engenharia/Computação"
 
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 

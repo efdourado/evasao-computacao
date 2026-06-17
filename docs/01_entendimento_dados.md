@@ -38,9 +38,10 @@ A variável `CO_IES` identifica a instituição e permite conectar a base de cur
 
 O filtro inicial por termos no nome do curso foi substituído por uma regra baseada na classificação CINE:
 
-1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP.
+1. cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP;
+2. cursos com `CO_CINE_ROTULO = 0714E04`, rótulo de Engenharia de Computação.
 
-Cursos relacionados que estejam em outras áreas gerais, como Engenharia de Computação, Computação formação de professor, Matemática Computacional, Física Computacional e Informática em Saúde, ficam fora do recorte oficial e são tratados pela auditoria de candidatos.
+Cursos relacionados que estejam fora desses critérios, como Matemática Computacional, Física Computacional e Informática em Saúde, ficam fora do recorte oficial e são tratados pela auditoria de candidatos.
 
 ## Bases geradas
 
@@ -53,10 +54,10 @@ data/processed/computacao_2024_preliminar.csv
 Resultado:
 
 ```text
-73134 linhas
+76865 linhas
 37 colunas
-3540 cursos distintos
-943 IES distintas
+3894 cursos distintos
+977 IES distintas
 ```
 
 A base tratada foi gerada em:
@@ -68,7 +69,7 @@ data/processed/computacao_2024_tratada.csv
 Resultado:
 
 ```text
-73134 linhas
+76865 linhas
 44 colunas
 ```
 
@@ -127,6 +128,7 @@ QT_SIT_FALECIDO
 
 ```text
 CINE área geral 6 Computação/TIC                73134
+CINE rótulo 0714E04 Engenharia de Computação     3731
 ```
 
 ### Valores ausentes
@@ -134,10 +136,10 @@ CINE área geral 6 Computação/TIC                73134
 A coluna com maior quantidade de valores ausentes foi:
 
 ```text
-SG_IES: 7507 ausentes
+SG_IES: 7766 ausentes
 ```
 
-As colunas de localização do curso apresentaram valores ausentes em 1292 registros:
+As colunas de localização do curso apresentaram valores ausentes em 1356 registros:
 
 ```text
 NO_MUNICIPIO
@@ -185,18 +187,18 @@ Esses códigos ainda podem receber rótulos descritivos com apoio do dicionário
 ### Indicadores agregados
 
 ```text
-Vagas: 2.641.395
-Inscritos: 1.423.984
-Ingressantes: 489.067
-Matriculados: 800.222
-Concluintes: 100.488
-Matrículas trancadas: 179.110
-Desvinculados: 302.613
-Transferidos: 19.763
-Falecidos: 74
+Vagas: 2.739.900
+Inscritos: 1.513.815
+Ingressantes: 509.828
+Matriculados: 860.791
+Concluintes: 106.157
+Matrículas trancadas: 188.392
+Desvinculados: 315.838
+Transferidos: 23.294
+Falecidos: 84
 ```
 
-A razão `desvinculados/matriculados` em 2024 fica em aproximadamente 37,82%. Esse valor deve ser tratado como indicador exploratório, não como taxa final de evasão, porque a metodologia definitiva depende da modelagem histórica e da validação conceitual do projeto.
+A razão `desvinculados/matriculados` em 2024 fica em aproximadamente 36,69%. Esse valor deve ser tratado como indicador exploratório, não como taxa final de evasão, porque a metodologia definitiva depende da modelagem histórica e da validação conceitual do projeto.
 
 ## Principais cursos capturados
 
@@ -207,6 +209,7 @@ Engenharia De Software                           7119
 Redes De Computadores                            5125
 Sistemas De Informação                           4909
 Ciência Da Computação                            3781
+Engenharia De Computação                         3651
 Sistemas Para Internet                           3037
 Jogos Digitais                                   2855
 Ciência De Dados                                 2813
@@ -229,6 +232,7 @@ Redes de computadores                      5125
 Ciência de dados                           5005
 Defesa cibernética                         3895
 Sistemas para internet                     3740
+Engenharia de computação                   3731
 Jogos digitais                             2982
 Banco de dados                             2817
 Segurança da informação                    2419

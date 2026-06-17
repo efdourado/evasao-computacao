@@ -11,6 +11,7 @@ PROCESSED.mkdir(parents=True, exist_ok=True)
 
 ARQ_CURSOS = RAW_2024 / "MICRODADOS_CADASTRO_CURSOS_2024.CSV"
 ARQ_IES = RAW_2024 / "MICRODADOS_ED_SUP_IES_2024.CSV"
+ROTULO_ENGENHARIA_COMPUTACAO = "0714E04"
 
 
 COLUNAS_CURSOS = [
@@ -58,7 +59,7 @@ COLUNAS_IES = [
 
 
 def limpar_codigo(serie):
-    return serie.fillna("").str.replace('"', "", regex=False).str.strip()
+    return serie.fillna("").str.replace('"', "", regex=False).str.strip().str.upper()
 
 
 def normalizar_texto(serie):
@@ -92,6 +93,7 @@ def carregar_dados():
 
 def filtrar_computacao(cursos):
     co_area_geral = limpar_codigo(cursos["CO_CINE_AREA_GERAL"])
+    co_cine_rotulo = limpar_codigo(cursos["CO_CINE_ROTULO"])
     no_area_geral = normalizar_texto(cursos["NO_CINE_AREA_GERAL"])
 
     filtro_cine_tic = (
@@ -101,11 +103,16 @@ def filtrar_computacao(cursos):
             regex=False,
         )
     )
+    filtro_eng_computacao = co_cine_rotulo.eq(ROTULO_ENGENHARIA_COMPUTACAO)
 
-    computacao = cursos[filtro_cine_tic].copy()
+    computacao = cursos[filtro_cine_tic | filtro_eng_computacao].copy()
 
     computacao["IN_ESCOPO_COMPUTACAO"] = True
     computacao["DS_CRITERIO_ESCOPO"] = "CINE área geral 6 Computação/TIC"
+    computacao.loc[
+        filtro_eng_computacao.loc[computacao.index] & ~filtro_cine_tic.loc[computacao.index],
+        "DS_CRITERIO_ESCOPO",
+    ] = "CINE rótulo 0714E04 Engenharia de Computação"
 
     print(f"Registros de Computação/TIC encontrados: {computacao.shape}")
     print("Critérios de entrada:")

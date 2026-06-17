@@ -42,7 +42,8 @@ evasao-computacao/
 │   ├── 08_validar_historico.py
 │   ├── 09_consolidar_alunos_quantitativo.py
 │   ├── 10_mesclar_evasao_historico.py
-│   └── 11_auditar_recorte_computacao.py
+│   ├── 11_auditar_recorte_computacao.py
+│   └── 12_gerar_planilha_oficial.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -84,11 +85,12 @@ pip freeze > requirements.txt
 
 ### `01_entender_2024.py`
 
-Carrega os arquivos de cursos e IES de 2024, cruza as bases por `NU_ANO_CENSO` e `CO_IES`, aplica o recorte oficial de Computação/TIC pela área geral 6 da CINE e gera arquivos em `data/processed/`.
+Carrega os arquivos de cursos e IES de 2024, cruza as bases por `NU_ANO_CENSO` e `CO_IES`, aplica o recorte oficial de Computação/TIC e gera arquivos em `data/processed/`.
 
 O recorte atual inclui:
 
-* cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP.
+* cursos na área geral CINE de Computação e Tecnologias da Informação e Comunicação (TIC), registrada como `6` no arquivo do INEP;
+* cursos com `CO_CINE_ROTULO = 0714E04`, rótulo de Engenharia de Computação.
 
 Arquivo principal gerado:
 
@@ -103,7 +105,7 @@ Abre a base preliminar gerada e imprime informações iniciais, como tamanho da 
 Resultado obtido até o momento:
 
 ```text
-73134 linhas x 37 colunas
+76865 linhas x 37 colunas
 ```
 
 ### `03_diagnostico_2024.py`
@@ -248,6 +250,18 @@ data/processed/historico/auditoria_recorte_computacao_resumo.csv
 
 Essa auditoria não altera a base automaticamente. Ela serve para revisar possíveis cursos deixados fora do recorte e documentar decisões metodológicas.
 
+### `12_gerar_planilha_oficial.py`
+
+Gera as planilhas oficiais a partir das bases histórica, comparável e com situação acadêmica.
+
+Arquivos gerados:
+
+```text
+data/processed/oficial/planilha_oficial_computacao.csv
+data/processed/oficial/planilha_oficial_computacao_expandida.csv
+data/processed/oficial/dicionario_planilha_oficial.csv
+```
+
 ## Integração histórica
 
 Além da análise de 2024, o projeto já possui uma estratégia inicial para integrar 2017, 2018, 2019, 2022 e 2024.
@@ -287,15 +301,17 @@ A primeira é expandida por localização/dimensão e deve alimentar mapas. A se
 
 ## Recorte de Computação/TIC
 
-O filtro principal prioriza a classificação oficial de área. Cursos relacionados que estejam fora da área geral 6 ficam separados na auditoria do recorte.
+O filtro principal usa a classificação oficial CINE/CINE Brasil.
 
 ```text
-2022/2024: CINE área geral 6, Computação e Tecnologias da Informação e Comunicação.
-2018/2019: CINE Brasil área geral 6, Computação e Tecnologias da Informação e Comunicação.
-2017: OCDE área específica 48, usada como aproximação histórica da área de Computação.
+2022/2024: CO_CINE_AREA_GERAL = 6 ou CO_CINE_ROTULO = 0714E04.
+2018/2019: CO_CINE_AREA_GERAL = 06 ou CO_CINE_ROTULO = 0714E04.
+2017: CO_OCDE_AREA_ESPECIFICA = 48 ou CO_OCDE = 5.23E+06.
 ```
 
 Em todos os anos antigos, o pipeline filtra graduação por `TP_NIVEL_ACADEMICO = 1` e exclui ABI por `TP_ATRIBUTO_INGRESSO <> 1`, preservando valores ausentes.
+
+`0714E04` é o rótulo CINE de Engenharia de Computação. Em 2017, `5.23E+06` funciona como aproximação histórica no padrão OCDE.
 
 A lista detalhada de validações e candidatos fora do recorte oficial está documentada em:
 
@@ -309,53 +325,54 @@ docs/04_estado_atual_projeto.md
 A execução atual gerou uma base preliminar com:
 
 ```text
-73134 registros
+76865 registros
 37 colunas
 ```
 
 E uma base tratada com:
 
 ```text
-73134 registros
+76865 registros
 44 colunas
-3540 cursos distintos
-943 IES distintas
+3894 cursos distintos
+977 IES distintas
 ```
 
 Distribuição por `TP_DIMENSAO`:
 
 ```text
-2    69541
-1     2301
-3     1239
-4       53
+2    72915
+1     2594
+3     1300
+4       56
 ```
 
 Distribuição por modalidade:
 
 ```text
-TP_MODALIDADE_ENSINO = 2    70833
-TP_MODALIDADE_ENSINO = 1     2301
+TP_MODALIDADE_ENSINO = 2    74271
+TP_MODALIDADE_ENSINO = 1     2594
 ```
 
 Critérios de entrada no recorte:
 
 ```text
 CINE área geral 6 Computação/TIC                73134
+CINE rótulo 0714E04 Engenharia de Computação     3731
 ```
 
 Indicadores agregados na base tratada:
 
 ```text
-Vagas: 2.641.395
-Inscritos: 1.423.984
-Ingressantes: 489.067
-Matriculados: 800.222
-Concluintes: 100.488
-Matrículas trancadas: 179.110
-Desvinculados: 302.613
-Transferidos: 19.763
-Falecidos: 74
+Vagas: 2.739.900
+Inscritos: 1.513.815
+Ingressantes: 509.828
+Matriculados: 860.791
+Concluintes: 106.157
+Matrículas trancadas: 188.392
+Desvinculados: 315.838
+Transferidos: 23.294
+Falecidos: 84
 ```
 
 Principais nomes de curso identificados:
@@ -367,6 +384,7 @@ Engenharia De Software                         7119
 Redes De Computadores                          5125
 Sistemas De Informação                         4909
 Ciência Da Computação                          3781
+Engenharia De Computação                       3651
 Sistemas Para Internet                          3037
 Jogos Digitais                                  2855
 Ciência De Dados                                2813
@@ -389,6 +407,7 @@ Redes de computadores                      5125
 Ciência de dados                           5005
 Defesa cibernética                         3895
 Sistemas para internet                     3740
+Engenharia de computação                   3731
 Jogos digitais                             2982
 Banco de dados                             2817
 Segurança da informação                    2419
