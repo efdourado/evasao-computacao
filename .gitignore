@@ -3,7 +3,11 @@ __pycache__/
 *.pyc
 
 data/raw/
-data/processed/
+data/processed/*
+!data/processed/oficial/
+!data/processed/oficial/*.csv
+!data/processed/validacao/
+!data/processed/validacao/*.csv
 
 .ipynb_checkpoints/
 .DS_Store

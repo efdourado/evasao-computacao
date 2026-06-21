@@ -1,0 +1,56 @@
+﻿COLUNA;DESCRICAO;ARQUIVOS
+NU_ANO_CENSO;Ano do Censo da Educação Superior.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+CO_IES;Código da instituição no INEP.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+NO_IES;Nome da instituição.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+SG_IES;Sigla da instituição, quando disponível.;planilha_oficial_computacao.csv
+CO_CURSO;Código do curso no INEP.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+NO_CURSO;Nome do curso.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+NO_CURSO_NORMALIZADO;Nome do curso normalizado para comparação textual.;planilha_oficial_computacao.csv
+DS_MODELO_DADOS;Estrutura de arquivo utilizada no ano.;planilha_oficial_computacao.csv
+DS_CRITERIO_ESCOPO;Regra que incluiu o curso no recorte oficial.;planilha_oficial_computacao.csv
+DS_CLASSIFICACAO_AREA;Classificação usada no ano: CINE, CINE Brasil ou OCDE.;planilha_oficial_computacao.csv
+DS_NIVEL_COMPARABILIDADE;Nível metodológico de comparabilidade do ano.;planilha_oficial_computacao.csv
+DS_OBSERVACAO_COMPARABILIDADE;Limitação ou adaptação aplicada ao ano.;planilha_oficial_computacao.csv
+DS_ORIGEM_SITUACAO_ACADEMICA;Fonte dos indicadores de situação acadêmica.;planilha_oficial_computacao.csv
+CO_AREA_GERAL;Código da área geral na classificação disponível.;planilha_oficial_computacao.csv
+NO_AREA_GERAL;Nome da área geral na classificação disponível.;planilha_oficial_computacao.csv
+CO_AREA_ESPECIFICA;Código da área específica.;planilha_oficial_computacao.csv
+NO_AREA_ESPECIFICA;Nome da área específica.;planilha_oficial_computacao.csv
+CO_AREA_DETALHADA;Código da área detalhada.;planilha_oficial_computacao.csv
+NO_AREA_DETALHADA;Nome da área detalhada.;planilha_oficial_computacao.csv
+CO_ROTULO_AREA;Código do rótulo CINE/OCDE.;planilha_oficial_computacao.csv
+NO_ROTULO_AREA;Nome do rótulo CINE/OCDE.;planilha_oficial_computacao.csv
+TP_GRAU_ACADEMICO;Código do grau acadêmico.;planilha_oficial_computacao.csv
+DS_TP_GRAU_ACADEMICO;Descrição do grau acadêmico.;planilha_oficial_computacao.csv
+TP_MODALIDADE_ENSINO;Código da modalidade de ensino.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+DS_TP_MODALIDADE_ENSINO;Modalidade presencial ou EaD.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+TP_CATEGORIA_ADMINISTRATIVA;Código da categoria administrativa da IES.;planilha_oficial_computacao.csv
+DS_TP_CATEGORIA_ADMINISTRATIVA;Descrição da categoria administrativa.;planilha_oficial_computacao.csv
+TP_REDE;Código da rede pública ou privada.;planilha_oficial_computacao.csv
+DS_TP_REDE;Descrição da rede.;planilha_oficial_computacao.csv
+TP_ORGANIZACAO_ACADEMICA;Código da organização acadêmica.;planilha_oficial_computacao.csv
+DS_TP_ORGANIZACAO_ACADEMICA;Descrição da organização acadêmica.;planilha_oficial_computacao.csv
+QT_LINHAS_EXPANDIDAS;Quantidade de linhas territoriais do curso.;planilha_oficial_computacao.csv
+IN_TEM_MULTIPLAS_LINHAS;Indica se o curso possui mais de uma linha territorial.;planilha_oficial_computacao.csv
+QT_UFS_DISTINTAS;Quantidade de UFs associadas ao curso.;planilha_oficial_computacao.csv
+SG_UF_LISTA;Lista de UFs associadas ao curso.;planilha_oficial_computacao.csv
+QT_MUNICIPIOS_DISTINTOS;Quantidade de municípios associados ao curso.;planilha_oficial_computacao.csv
+TP_DIMENSAO_LISTA;Dimensões territoriais presentes no curso.;planilha_oficial_computacao.csv
+DS_TP_DIMENSAO_LISTA;Descrição das dimensões territoriais presentes.;planilha_oficial_computacao.csv
+IN_USAR_MAPA_MUNICIPAL;Indica se a linha pode ser usada em mapa municipal.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_VG_TOTAL;Quantidade de vagas.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_INSCRITO_TOTAL;Quantidade de inscritos, quando disponível.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_ING;Quantidade de ingressantes.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_MAT;Quantidade de matrículas.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_CONC;Quantidade de concluintes.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_SIT_TRANCADA;Vínculos com situação trancada.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_SIT_DESVINCULADO;Vínculos com situação desvinculada.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_SIT_TRANSFERIDO;Vínculos com situação transferida.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+QT_SIT_FALECIDO;Vínculos com situação falecido.;planilha_oficial_computacao.csv | planilha_oficial_computacao_expandida.csv
+TP_DIMENSAO;Código da dimensão territorial do registro.;planilha_oficial_computacao_expandida.csv
+DS_TP_DIMENSAO;Descrição da dimensão territorial.;planilha_oficial_computacao_expandida.csv
+DS_NIVEL_GEOGRAFICO;Nível geográfico disponível no registro.;planilha_oficial_computacao_expandida.csv
+CO_UF;Código da unidade federativa.;planilha_oficial_computacao_expandida.csv
+SG_UF;Sigla da unidade federativa.;planilha_oficial_computacao_expandida.csv
+CO_MUNICIPIO;Código do município.;planilha_oficial_computacao_expandida.csv
+NO_MUNICIPIO;Nome do município.;planilha_oficial_computacao_expandida.csv
