@@ -13,6 +13,26 @@ data/raw/ANO/referencia/
 
 Os dados brutos não são versionados: a pasta local tem aproximadamente 11 GB e contém arquivos individuais de 2 a 3 GB.
 
+## Baixar os dados brutos (Google Drive)
+
+Os arquivos brutos não ficam versionados no repositório (pesam ~11 GB no total). Eles estão hospedados em um Google Drive compartilhado do projeto e podem ser baixados por qualquer colaborador, sem autenticação, com:
+
+```bash
+.venv/bin/python scripts/baixar_dados_drive.py
+```
+
+O script usa o pacote `gdown` para baixar direto do Drive público (basta o link estar como "Qualquer pessoa com o link pode visualizar"), inclusive arquivos de 2-3 GB que passam pela tela de confirmação do Google. Cada ano cai em `data/raw/<ano>/`, no formato que os scripts da pipeline já esperam.
+
+Opções úteis:
+
+```bash
+.venv/bin/python scripts/baixar_dados_drive.py --listar        # mostra o que está mapeado, sem baixar
+.venv/bin/python scripts/baixar_dados_drive.py --ano 2022 2024 # baixa só alguns anos
+.venv/bin/python scripts/baixar_dados_drive.py --forcar        # baixa de novo mesmo se já existir
+```
+
+Para adicionar um novo ano, ou corrigir/atualizar um ID do Drive, basta editar o dicionário `FONTES_DRIVE` no início do script — cada entrada aceita uma pasta inteira do Drive (quando os CSVs de um ano vêm todos juntos) ou uma lista de arquivos individuais com seus IDs. O próprio script explica esse formato em comentários.
+
 ## Ambiente
 
 ```bash
