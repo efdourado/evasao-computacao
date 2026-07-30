@@ -33,7 +33,7 @@ def detectar_delimitador(caminho):
 
 
 def localizar_arquivo_aluno(ano):
-    pasta_ano = RAW / ano
+    pasta_ano = RAW / ano / "dados"
     if not pasta_ano.exists():
         return None
 

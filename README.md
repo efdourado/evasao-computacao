@@ -22,8 +22,8 @@ As três planilhas finais ficam em `data/processed/oficial/`:
 
 | Arquivo | Finalidade |
 | --- | --- |
-| `planilha_oficial_computacao.csv` | base principal, com uma linha por ano + IES + curso |
-| `planilha_oficial_computacao_expandida.csv` | localizações e dimensões territoriais para mapas |
+| `planilha_oficial_computacao.csv` | base principal, com uma linha por ano + IES + curso (43.304 registros) |
+| `planilha_oficial_computacao_expandida.csv` | localizações e dimensões territoriais para mapas (315.237 registros) |
 | `dicionario_planilha_oficial.csv` | descrição das colunas e dos arquivos em que aparecem |
 
 Os arquivos brutos permanecem localmente em `data/raw/`. Eles somam aproximadamente 11 GB e incluem arquivos individuais acima do limite comum do GitHub, por isso não são versionados. As planilhas finais e a validação são versionadas.

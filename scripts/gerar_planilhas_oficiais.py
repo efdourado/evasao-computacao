@@ -181,35 +181,59 @@ def gerar_dicionario():
         for coluna, nomes in arquivos.items()
     ])
 
+def valor_para_texto(v):
+    """Converte um valor para a mesma representação textual que ele teria
+    se tivesse sido lido de um CSV já existente (evita '150' num bloco e
+    '150.0' no outro, dentro da mesma coluna)."""
+    if pd.isna(v):
+        return ""
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    return str(v)
+ 
+ 
 def atualizar_planilha(nova_df, caminho_saida):
     if not caminho_saida.exists():
         nova_df.to_csv(caminho_saida, sep=";", index=False, encoding="utf-8-sig")
         return
-
-    # Limpeza e extração de todos os anos a serem atualizados
-    nova_df["NU_ANO_CENSO"] = nova_df["NU_ANO_CENSO"].astype(str).str.strip()
-    anos_a_remover = nova_df["NU_ANO_CENSO"].unique()
-
-    # Carregamento e limpeza da base oficial existente
+ 
+    nova_df = nova_df.copy()
+    nova_df["NU_ANO_CENSO"] = nova_df["NU_ANO_CENSO"].astype(str)
+    anos_novos = nova_df["NU_ANO_CENSO"].unique()
+ 
+    if len(anos_novos) > 1:
+        raise ValueError("A planilha de entrada contém múltiplos anos.")
+    ano_a_remover = anos_novos[0]
+ 
     existente_df = pd.read_csv(caminho_saida, sep=";", encoding="utf-8-sig", dtype=str, low_memory=False)
-    existente_df["NU_ANO_CENSO"] = existente_df["NU_ANO_CENSO"].astype(str).str.strip()
-    
-    # Remoção de todos os anos que serão substituídos
-    existente_df = existente_df[~existente_df["NU_ANO_CENSO"].isin(anos_a_remover)]
-
-    # União resiliente de colunas (Mantém a ordem do antigo e adiciona as novas no fim)
-    colunas_novas = [c for c in nova_df.columns if c not in existente_df.columns]
-    if colunas_novas:
-        print(f"[AVISO PIPELINE] Novas colunas detectadas no bloco incremental: {colunas_novas}")
-    
-    colunas_finais = existente_df.columns.tolist() + colunas_novas
-    
-    # Alinha ambos os lados para o novo schema unificado, garantindo consistência de tipo
-    existente_df = existente_df.reindex(columns=colunas_finais).astype(str)
-    nova_df_alinhada = nova_df.reindex(columns=colunas_finais).astype(str)
-
-    # Concatena o histórico (sem os anos antigos) com os novos dados e salva
-    combinado_df = pd.concat([existente_df, nova_df_alinhada], ignore_index=True)
+    existente_df["NU_ANO_CENSO"] = existente_df["NU_ANO_CENSO"].astype(str)
+ 
+    # Remove de forma limpa o ano sob processamento da planilha oficial acumulada
+    existente_df = existente_df[existente_df["NU_ANO_CENSO"] != ano_a_remover]
+ 
+    # Esquema final = colunas antigas (na mesma ordem) + qualquer coluna nova
+    # que só exista no bloco atual. Antes isso era um reindex direto pro
+    # schema antigo, que descartava silenciosamente colunas novas.
+    colunas_antigas = existente_df.columns.tolist()
+    colunas_novas_extra = [c for c in nova_df.columns if c not in colunas_antigas]
+    if colunas_novas_extra:
+        print(
+            f"[aviso] a planilha nova traz {len(colunas_novas_extra)} coluna(s) que não existiam "
+            f"no arquivo acumulado ({', '.join(colunas_novas_extra)}). Foram adicionadas ao final "
+            "do esquema (ficam vazias nas linhas dos anos antigos)."
+        )
+    colunas_finais = colunas_antigas + colunas_novas_extra
+ 
+    # Normaliza os dois lados para texto antes de concatenar, pra não
+    # misturar "150" (lido como string do CSV antigo) com 150.0 (numérico
+    # da execução atual) na mesma coluna.
+    nova_df_alinhada = nova_df.reindex(columns=colunas_finais)
+    for coluna in nova_df_alinhada.columns:
+        nova_df_alinhada[coluna] = nova_df_alinhada[coluna].map(valor_para_texto)
+ 
+    existente_df_alinhada = existente_df.reindex(columns=colunas_finais, fill_value="")
+ 
+    combinado_df = pd.concat([existente_df_alinhada, nova_df_alinhada], ignore_index=True)
     combinado_df.to_csv(caminho_saida, sep=";", index=False, encoding="utf-8-sig")
 
 def main():
@@ -221,17 +245,25 @@ def main():
     cursos = pd.read_csv(BASE_CURSOS, sep=";", encoding="utf-8-sig", dtype=str, low_memory=False)
     expandida = pd.read_csv(BASE_EXPANDIDA, sep=";", encoding="utf-8-sig", dtype=str, low_memory=False)
 
-    principal = selecionar(integrar_situacao(cursos), COLUNAS_PRINCIPAL)
-    expandida = selecionar(expandida, COLUNAS_EXPANDIDA)
+    anos_a_processar = sorted(cursos["NU_ANO_CENSO"].unique())
+    print(f"Anos a serem processados e atualizados nas planilhas oficiais: {anos_a_processar}")
 
-    atualizar_planilha(principal, SAIDA_PRINCIPAL)
-    atualizar_planilha(expandida, SAIDA_EXPANDIDA)
+    for ano in anos_a_processar:
+        print(f"\nProcessando ano: {ano}")
+        cursos_ano = cursos[cursos["NU_ANO_CENSO"] == ano]
+        expandida_ano = expandida[expandida["NU_ANO_CENSO"] == ano]
+
+        principal = selecionar(integrar_situacao(cursos_ano), COLUNAS_PRINCIPAL)
+        expandida_ano = selecionar(expandida_ano, COLUNAS_EXPANDIDA)
+
+        atualizar_planilha(principal, SAIDA_PRINCIPAL)
+        atualizar_planilha(expandida_ano, SAIDA_EXPANDIDA)
 
     gerar_dicionario().to_csv(SAIDA_DICIONARIO, sep=";", index=False, encoding="utf-8-sig")
 
     print("\nPlanilhas oficiais geradas com sucesso:")
-    print(f"Planilha Principal (Curso Único): {SAIDA_PRINCIPAL} {principal.shape}")
-    print(f"Planilha Expandida (Polos Geográficos): {SAIDA_EXPANDIDA} {expandida.shape}")
+    print(f"Planilha Principal (Curso Único): {SAIDA_PRINCIPAL}")
+    print(f"Planilha Expandida (Polos Geográficos): {SAIDA_EXPANDIDA}")
     print(f"Dicionário de Variáveis Técnico: {SAIDA_DICIONARIO}")
 
 if __name__ == "__main__":

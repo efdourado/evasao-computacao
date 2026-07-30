@@ -188,7 +188,7 @@ def read_csv_disponivel(caminho, colunas_desejadas):
 
 
 def encontrar_arquivo(ano, nomes):
-    pasta_ano = RAW / str(ano)
+    pasta_ano = RAW / str(ano) / "dados"
     if not pasta_ano.exists():
         return None
 
@@ -505,6 +505,13 @@ def processar_ano_ocde_2017():
         print("[2017] Arquivos necessários para processamento OCDE/Série histórica ausentes.")
         return pd.DataFrame()
 
+    ROTULOS_OCDE_VALIDOS = {
+        "481A01", "481B01", "481C01", "481I01", "481T01", "481T02",
+        "482U01", "483A01", "483A02", "483S01", "483S02", "523E06",
+        "523A01", "523M01", "523S03", "523T01", "523T03", "523T04",
+        "523T05", "523T06"
+    }
+
     # Carga defensiva mapeando estritamente colunas fundamentais
     cursos = read_csv(arq_curso)
     ies = read_csv(arq_ies, usecols=lambda c: c in ["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"])
@@ -516,7 +523,7 @@ def processar_ano_ocde_2017():
 
     # Filtro expandido de escopo: Área específica 48 ou proxies estáveis de Engenharia de Computação
     filtro_area = cursos["CO_OCDE_AREA_ESPECIFICA"].eq("48")
-    filtro_eng = cursos["CO_OCDE"].str.startswith("523", na=False) | cursos["CO_OCDE"].eq("5.23E+06")
+    filtro_eng = cursos["CO_OCDE"].isin(ROTULOS_OCDE_VALIDOS)
 
     base = cursos[filtro_graduacao_sem_abi(cursos) & (filtro_area | filtro_eng)].copy()
     
@@ -524,7 +531,7 @@ def processar_ano_ocde_2017():
         return pd.DataFrame()
 
     base["DS_CRITERIO_ESCOPO"] = "OCDE área específica 48 Computação"
-    base.loc[filtro_eng & ~filtro_area, "DS_CRITERIO_ESCOPO"] = "OCDE proxy Engenharia de Computação"
+    base.loc[filtro_eng & ~filtro_area, "DS_CRITERIO_ESCOPO"] = "OCDE rótulo específico Computação/TIC"
 
     # Junção com a tabela cadastral de IES
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
@@ -533,7 +540,7 @@ def processar_ano_ocde_2017():
     base["DS_MODELO_DADOS"] = "antigo"
     base["DS_CLASSIFICACAO_AREA"] = "OCDE"
     base["DS_NIVEL_COMPARABILIDADE"] = "media_ocde_proxy"
-    base["DS_OBSERVACAO_COMPARABILIDADE"] = "Usa classificação OCDE (Área 48 ou subgrupo 523 para Engenharia)."
+    base["DS_OBSERVACAO_COMPARABILIDADE"] = "Usa classificação OCDE (Área 48 ou rótulos específicos de Computação/TIC)."
     
     # Padronização Geográfica Resiliente (Tratamento de Zeros à Esquerda na UF)
     base["SG_UF"] = base["CO_UF"].str.zfill(2).map(MAPA_UF)
