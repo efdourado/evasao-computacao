@@ -2,8 +2,8 @@
 status;APROVADO;INFO;Resultado geral da validacao.
 erros;0;OK;Ocorrencias que bloqueiam o uso.
 alertas;0;OK;Ocorrencias que exigem revisao.
-linhas_planilha_principal;43481;INFO;Uma linha por ano, IES e curso.
-linhas_planilha_expandida;315414;INFO;Linhas territoriais e dimensionais.
-chaves_curso_ies;43481;INFO;Quantidade de cursos logicos.
-siglas_ies_ausentes;3942;INFO;"SG_IES e opcional; CO_IES e NO_IES estao preenchidos."
+linhas_planilha_principal;43304;INFO;Uma linha por ano, IES e curso.
+linhas_planilha_expandida;315237;INFO;Linhas territoriais e dimensionais.
+chaves_curso_ies;43304;INFO;Quantidade de cursos logicos.
+siglas_ies_ausentes;3922;INFO;"SG_IES e opcional; CO_IES e NO_IES estao preenchidos."
 anos;2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024;INFO;Anos presentes na base.

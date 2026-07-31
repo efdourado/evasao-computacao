@@ -97,7 +97,7 @@ O ano de 2017 usa a classificação OCDE, não CINE. Para aproximar o mesmo univ
 ```text
 CO_OCDE_AREA_ESPECIFICA = 48
 ou
-CO_OCDE = 5.23E+06
+CO_OCDE = 523E06
 ```
 
 Na área específica 48 aparecem:
@@ -155,11 +155,11 @@ Assim, 2009 é o início da série oficial atual. Os anos anteriores não foram 
 
 `planilha_oficial_computacao.csv` é a base recomendada para séries históricas, contagem de cursos e análises por instituição.
 
-Ela possui **43.481 linhas** e uma única linha por ano + IES + curso. Quando o arquivo original traz o curso dividido por polos ou localidades, as métricas são somadas nessa chave e as localizações são resumidas em colunas como `QT_UFS_DISTINTAS` e `SG_UF_LISTA`.
+Ela possui **43.304 chaves** e uma única linha por ano + IES + curso. Quando o arquivo original traz o curso dividido por polos ou localidades, as métricas são somadas nessa chave e as localizações são resumidas em colunas como `QT_UFS_DISTINTAS` e `SG_UF_LISTA`.
 
 ### Planilha expandida
 
-`planilha_oficial_computacao_expandida.csv` possui **315.414 linhas** porque preserva as linhas territoriais dos arquivos originais.
+`planilha_oficial_computacao_expandida.csv` possui **315.237 linhas territoriais.** porque preserva as linhas territoriais dos arquivos originais.
 
 Um curso EaD pode aparecer uma vez para cada polo ou município. Por exemplo, um mesmo curso pode possuir mais de mil linhas territoriais, embora continue sendo apenas um curso na planilha principal.
 

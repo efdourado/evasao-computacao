@@ -61,15 +61,15 @@ Existem 3.942 linhas sem `SG_IES`. Isso não impede a identificação da institu
 Após essas decisões, uma base íntegra deve apresentar:
 
 ```text
-Erros: 0
+Total de Erros Críticos: 0
 Alertas: 0
 ```
 
 Além disso:
 
 ```text
-43.481 chaves distintas na planilha principal
-315.414 linhas territoriais na planilha expandida
+Planilha Principal (Curso Único por Ano): 43.304 chaves distintas.
+Planilha Expandida (Polos Geográficos): 315.237 linhas territoriais.
 2009 a 2024 presentes
 nenhuma linha fora do recorte oficial
 nenhuma coluna individual de aluno ou docente
