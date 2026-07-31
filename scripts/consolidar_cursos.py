@@ -188,7 +188,7 @@ def read_csv_disponivel(caminho, colunas_desejadas):
 
 
 def encontrar_arquivo(ano, nomes):
-    pasta_ano = RAW / str(ano) / "dados"
+    pasta_ano = RAW / str(ano)
     if not pasta_ano.exists():
         return None
 
@@ -496,88 +496,107 @@ def processar_ano_cine_antigo(ano, arq_curso, arq_ies, arq_cine):
 
 
 def processar_ano_ocde_2017():
-    """Processa o ano de 2017 (e retroativos) utilizando a classificação de área OCDE."""
     arq_curso = encontrar_arquivo("2017", ["DM_CURSO.CSV"])
     arq_ies = encontrar_arquivo("2017", ["DM_IES.CSV"])
     arq_ocde = encontrar_arquivo("2017", ["TB_AUX_AREA_OCDE.CSV"])
 
-    if not all([arq_curso, arq_ies, arq_ocde]):
-        print("[2017] Arquivos necessários para processamento OCDE/Série histórica ausentes.")
+    if arq_curso is None or not arq_curso.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_curso}")
+        return pd.DataFrame()
+    if arq_ies is None or not arq_ies.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_ies}")
+        return pd.DataFrame()
+    if arq_ocde is None or not arq_ocde.exists():
+        print(f"[2017] Arquivo não encontrado: {arq_ocde}")
         return pd.DataFrame()
 
-    ROTULOS_OCDE_VALIDOS = {
-        "481A01", "481B01", "481C01", "481I01", "481T01", "481T02",
-        "482U01", "483A01", "483A02", "483S01", "483S02", "523E06",
-        "523A01", "523M01", "523S03", "523T01", "523T03", "523T04",
-        "523T05", "523T06"
-    }
+    cols_curso = [
+        "NU_ANO_CENSO",
+        "CO_IES",
+        "CO_CURSO",
+        "NO_CURSO",
+        "CO_LOCAL_OFERTA",
+        "CO_UF",
+        "CO_MUNICIPIO",
+        "CO_OCDE_AREA_GERAL",
+        "CO_OCDE_AREA_ESPECIFICA",
+        "CO_OCDE_AREA_DETALHADA",
+        "CO_OCDE",
+        "TP_CATEGORIA_ADMINISTRATIVA",
+        "TP_ORGANIZACAO_ACADEMICA",
+        "TP_GRAU_ACADEMICO",
+        "TP_MODALIDADE_ENSINO",
+        "TP_NIVEL_ACADEMICO",
+        "TP_ATRIBUTO_INGRESSO",
+        "QT_MATRICULA_TOTAL",
+        "QT_CONCLUINTE_TOTAL",
+        "QT_INGRESSO_TOTAL",
+        "QT_VAGA_TOTAL",
+    ]
 
-    # Carga defensiva mapeando estritamente colunas fundamentais
-    cursos = read_csv(arq_curso)
-    ies = read_csv(arq_ies, usecols=lambda c: c in ["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"])
-    
-    # Garantia absoluta de tratamento de strings para evitar problemas de notação científica
-    cursos["CO_OCDE"] = limpar_codigo(cursos.get("CO_OCDE", pd.Series("", index=cursos.index)))
-    cursos["CO_OCDE_AREA_ESPECIFICA"] = limpar_codigo(cursos.get("CO_OCDE_AREA_ESPECIFICA", pd.Series("", index=cursos.index)))
-    cursos["CO_UF"] = cursos.get("CO_UF", pd.Series("", index=cursos.index)).fillna("").astype(str).str.strip()
+    cursos = read_csv(arq_curso, usecols=cols_curso)
+    ocde = read_csv(arq_ocde)
+    ies = read_csv(arq_ies, usecols=["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"])
 
-    # Filtro expandido de escopo: Área específica 48 ou proxies estáveis de Engenharia de Computação
-    filtro_area = cursos["CO_OCDE_AREA_ESPECIFICA"].eq("48")
-    filtro_eng = cursos["CO_OCDE"].isin(ROTULOS_OCDE_VALIDOS)
+    base = cursos.merge(
+        ocde,
+        on=[
+            "NU_ANO_CENSO",
+            "CO_OCDE_AREA_GERAL",
+            "CO_OCDE_AREA_ESPECIFICA",
+            "CO_OCDE_AREA_DETALHADA",
+            "CO_OCDE",
+        ],
+        how="left",
+    )
 
-    base = cursos[filtro_graduacao_sem_abi(cursos) & (filtro_area | filtro_eng)].copy()
-    
-    if base.empty:
-        return pd.DataFrame()
+    filtro_area = base["CO_OCDE_AREA_ESPECIFICA"].eq("48")
+    filtro_eng = limpar_codigo(base["CO_OCDE"]).eq(OCDE_PROXY_ENGENHARIA_COMPUTACAO)
 
+    base = base[filtro_graduacao_sem_abi(base) & (filtro_area | filtro_eng)].copy()
     base["DS_CRITERIO_ESCOPO"] = "OCDE área específica 48 Computação"
-    base.loc[filtro_eng & ~filtro_area, "DS_CRITERIO_ESCOPO"] = "OCDE rótulo específico Computação/TIC"
+    base.loc[
+        filtro_eng.loc[base.index] & ~filtro_area.loc[base.index],
+        "DS_CRITERIO_ESCOPO",
+    ] = "OCDE proxy 5.23E+06 Engenharia/Computação"
 
-    # Junção com a tabela cadastral de IES
     base = base.merge(ies, on=["NU_ANO_CENSO", "CO_IES"], how="left")
 
-    # Camada de Normalização de Esquema do Modelo Antigo para Modelo Novo
     base["DS_MODELO_DADOS"] = "antigo"
     base["DS_CLASSIFICACAO_AREA"] = "OCDE"
     base["DS_NIVEL_COMPARABILIDADE"] = "media_ocde_proxy"
-    base["DS_OBSERVACAO_COMPARABILIDADE"] = "Usa classificação OCDE (Área 48 ou rótulos específicos de Computação/TIC)."
-    
-    # Padronização Geográfica Resiliente (Tratamento de Zeros à Esquerda na UF)
-    base["SG_UF"] = base["CO_UF"].str.zfill(2).map(MAPA_UF)
+    base["DS_OBSERVACAO_COMPARABILIDADE"] = (
+        "2017 nao possui CINE; usa OCDE area especifica 48 e proxy "
+        "5.23E+06 para Engenharia/Computacao."
+    )
+    base["CO_AREA_GERAL"] = base["CO_OCDE_AREA_GERAL"]
+    base["NO_AREA_GERAL"] = base["NO_OCDE_AREA_GERAL"]
+    base["CO_AREA_ESPECIFICA"] = base["CO_OCDE_AREA_ESPECIFICA"]
+    base["NO_AREA_ESPECIFICA"] = base["NO_OCDE_AREA_ESPECIFICA"]
+    base["CO_AREA_DETALHADA"] = base["CO_OCDE_AREA_DETALHADA"]
+    base["NO_AREA_DETALHADA"] = base["NO_OCDE_AREA_DETALHADA"]
+    base["CO_ROTULO_AREA"] = base["CO_OCDE"]
+    base["NO_ROTULO_AREA"] = base["NO_OCDE"]
+    base["SG_UF"] = base["CO_UF"].map(MAPA_UF)
     base["NO_MUNICIPIO"] = pd.NA
     base["TP_DIMENSAO"] = pd.NA
-    base["DS_TP_DIMENSAO"] = "Não disponível no modelo antigo"
-    
-    base["DS_NIVEL_GEOGRAFICO"] = base["TP_MODALIDADE_ENSINO"].map({
-        "1": "Curso presencial com localização no curso",
-        "2": "Curso EaD sem polos identificáveis na tabela de curso"
-    })
-    
-    base["IN_USAR_MAPA_MUNICIPAL"] = (
-        base["TP_MODALIDADE_ENSINO"].eq("1") & 
-        base.get("CO_MUNICIPIO", pd.Series("", index=base.index)).notna()
+    base["DS_TP_DIMENSAO"] = "Não existia no modelo antigo"
+    base["DS_NIVEL_GEOGRAFICO"] = base["TP_MODALIDADE_ENSINO"].map(
+        {
+            "1": "Curso presencial com localização no curso",
+            "2": "Curso EaD sem polos identificáveis na tabela de curso",
+        }
     )
-
-    # De-para das métricas de Curso (Antigo -> Novo)
-    base["QT_VG_TOTAL"] = base.get("QT_VAGA_TOTAL", pd.NA)
-    base["QT_INSCRITO_TOTAL"] = base.get("QT_INSCRITO_TOTAL", pd.NA)
-    base["QT_ING"] = base.get("QT_INGRESSO_TOTAL", pd.NA)
-    base["QT_MAT"] = base.get("QT_MATRICULA_TOTAL", pd.NA)
-    base["QT_CONC"] = base.get("QT_CONCLUINTE_TOTAL", pd.NA)
-
-    # Inicialização de colunas de fluxo ausentes na tabela de Cursos nos anos antigos
-    for col in ["QT_SIT_TRANCADA", "QT_SIT_DESVINCULADO", "QT_SIT_TRANSFERIDO", "QT_SIT_FALECIDO"]:
-        base[col] = pd.NA
-
-    # Mapeamento reversível dos metadados de área
-    base["CO_AREA_GERAL"] = base.get("CO_OCDE_AREA_GERAL", pd.NA)
-    base["NO_AREA_GERAL"] = base.get("NO_OCDE_AREA_GERAL", pd.NA)
-    base["CO_AREA_ESPECIFICA"] = base.get("CO_OCDE_AREA_ESPECIFICA", pd.NA)
-    base["NO_AREA_ESPECIFICA"] = base.get("NO_OCDE_AREA_ESPECIFICA", pd.NA)
-    base["CO_AREA_DETALHADA"] = base.get("CO_OCDE_AREA_DETALHADA", pd.NA)
-    base["NO_AREA_DETALHADA"] = base.get("NO_OCDE_AREA_DETALHADA", pd.NA)
-    base["CO_ROTULO_AREA"] = base.get("CO_OCDE", pd.NA)
-    base["NO_ROTULO_AREA"] = base.get("NO_OCDE", pd.NA)
+    base["IN_USAR_MAPA_MUNICIPAL"] = (
+        base["TP_MODALIDADE_ENSINO"].eq("1")
+        & base["CO_MUNICIPIO"].notna()
+        & base["CO_MUNICIPIO"].ne("")
+    )
+    base["QT_VG_TOTAL"] = base["QT_VAGA_TOTAL"]
+    base["QT_INSCRITO_TOTAL"] = pd.NA
+    base["QT_ING"] = base["QT_INGRESSO_TOTAL"]
+    base["QT_MAT"] = base["QT_MATRICULA_TOTAL"]
+    base["QT_CONC"] = base["QT_CONCLUINTE_TOTAL"]
 
     base = adicionar_rotulos(base)
     return finalizar(base)
