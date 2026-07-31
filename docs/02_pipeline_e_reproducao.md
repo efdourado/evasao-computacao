@@ -13,6 +13,24 @@ data/raw/ANO/referencia/
 
 Os dados brutos não são versionados: a pasta local tem aproximadamente 11 GB e contém arquivos individuais de 2 a 3 GB.
 
+## Baixar os dados brutos
+
+Se os arquivos brutos não estiverem disponíveis localmente, baixar do Drive compartilhado do projeto:
+
+```bash
+.venv/bin/python scripts/baixar_dados_drive.py
+```
+
+Opções úteis:
+
+```bash
+.venv/bin/python scripts/baixar_dados_drive.py --listar
+.venv/bin/python scripts/baixar_dados_drive.py --ano 2022 2024
+.venv/bin/python scripts/baixar_dados_drive.py --forcar
+```
+
+O script organiza cada ano em `data/raw/ANO/dados/` e `data/raw/ANO/referencia/`, preservando CSVs de dados e materiais de referência úteis. Questionários e arquivos auxiliares sem uso direto são descartados durante essa organização.
+
 ## Ambiente
 
 ```bash
