@@ -37,6 +37,7 @@ def localizar_arquivo_aluno(ano):
     if not pasta_ano.exists():
         return None
 
+    pastas_busca = [pasta_ano / "dados", pasta_ano]
     candidatos = [
         f"MICRODADOS_CADASTRO_ALUNOS_{ano}.CSV",
         f"SUP_ALUNO_{ano}.CSV",
@@ -44,15 +45,24 @@ def localizar_arquivo_aluno(ano):
         "DM_ALUNO.CSV",
     ]
 
-    for nome in candidatos:
-        for caminho in sorted(pasta_ano.rglob(nome)):
-            if caminho.exists():
-                return caminho
+    for pasta in pastas_busca:
+        if not pasta.exists():
+            continue
+        for nome in candidatos:
+            for caminho in sorted(pasta.rglob(nome)):
+                if caminho.exists():
+                    return caminho
 
-    arquivos = sorted(pasta_ano.rglob("*ALUNO*.CSV")) + sorted(
-        pasta_ano.rglob("*ALUNO*.csv")
-    )
-    return arquivos[0] if arquivos else None
+    for pasta in pastas_busca:
+        if not pasta.exists():
+            continue
+        arquivos = sorted(pasta.rglob("*ALUNO*.CSV")) + sorted(
+            pasta.rglob("*ALUNO*.csv")
+        )
+        if arquivos:
+            return arquivos[0]
+
+    return None
 
 
 def primeira_coluna_existente(colunas, candidatos):

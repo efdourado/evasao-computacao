@@ -192,10 +192,14 @@ def encontrar_arquivo(ano, nomes):
     if not pasta_ano.exists():
         return None
 
+    pastas_busca = [pasta_ano / "dados", pasta_ano]
     nomes_normalizados = {nome.upper() for nome in nomes}
-    for caminho in sorted(pasta_ano.rglob("*.CSV")) + sorted(pasta_ano.rglob("*.csv")):
-        if caminho.name.upper() in nomes_normalizados:
-            return caminho
+    for pasta in pastas_busca:
+        if not pasta.exists():
+            continue
+        for caminho in sorted(pasta.rglob("*.CSV")) + sorted(pasta.rglob("*.csv")):
+            if caminho.name.upper() in nomes_normalizados:
+                return caminho
 
     return None
 
