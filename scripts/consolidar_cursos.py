@@ -13,6 +13,8 @@ SAIDA_BASE = OUT / "cursos_expandida.csv"
 DELIMITADORES_CANDIDATOS = [";", "|", ",", "\t"]
 ROTULO_ENGENHARIA_COMPUTACAO = "0714E04"
 OCDE_PROXY_ENGENHARIA_COMPUTACAO = "5.23E+06"
+OCDE_ROTULO_ENGENHARIA_COMPUTACAO = "523E04"
+OCDE_NOME_ENGENHARIA_COMPUTACAO = "Engenharia de computação"
 ANOS_CADASTRO_CINE = [
     "2009",
     "2010",
@@ -225,7 +227,22 @@ def filtro_graduacao_sem_abi(df):
         .astype(str)
         .str.strip()
     )
-    return nivel.eq("1") & ~atributo.eq("1")
+    nome = (
+        df.get("NO_CURSO", pd.Series("", index=df.index))
+        .fillna("")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+    abi_no_nome = nome.str.contains(
+        r"(?:^|[^A-Z0-9])ABI(?:[^A-Z0-9]|$)|[ÁA]REA B[ÁA]SICA DE INGRESSO",
+        regex=True,
+    )
+    return (
+        nivel.isin(["1", "1.0"])
+        & ~atributo.isin(["1", "1.0"])
+        & ~abi_no_nome
+    )
 
 
 def adicionar_rotulos(df):
@@ -581,6 +598,13 @@ def processar_ano_ocde_2017():
     base["NO_AREA_DETALHADA"] = base["NO_OCDE_AREA_DETALHADA"]
     base["CO_ROTULO_AREA"] = base["CO_OCDE"]
     base["NO_ROTULO_AREA"] = base["NO_OCDE"]
+    # No DM_CURSO de 2017, 523E04 foi serializado como 5.23E+06. A tabela
+    # auxiliar preserva o código textual, então o merge não recupera o rótulo.
+    # Mantemos a regra de inclusão pelo valor bruto e normalizamos apenas a
+    # classificação exposta na planilha oficial.
+    proxy_eng = limpar_codigo(base["CO_OCDE"]).eq(OCDE_PROXY_ENGENHARIA_COMPUTACAO)
+    base.loc[proxy_eng, "CO_ROTULO_AREA"] = OCDE_ROTULO_ENGENHARIA_COMPUTACAO
+    base.loc[proxy_eng, "NO_ROTULO_AREA"] = OCDE_NOME_ENGENHARIA_COMPUTACAO
     base["SG_UF"] = base["CO_UF"].map(MAPA_UF)
     base["NO_MUNICIPIO"] = pd.NA
     base["TP_DIMENSAO"] = pd.NA

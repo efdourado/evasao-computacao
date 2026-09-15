@@ -147,7 +147,7 @@ def validar_principal(principal):
         area_geral.isin(["6", "06"]) | rotulo.eq("0714E04")
     )
     ocde = classificacao.eq("OCDE") & (
-        area_especifica.eq("48") | rotulo.eq("5.23E+06")
+        area_especifica.eq("48") | rotulo.isin(["5.23E+06", "523E04"])
     )
     fora_recorte = principal[~(cine | ocde)]
     resultados.append(
@@ -157,6 +157,23 @@ def validar_principal(principal):
             nome,
             "Curso fora da area 6/0714E04 ou do proxy OCDE de 2017.",
             fora_recorte,
+        )
+    )
+
+    nome_curso = texto(principal["NO_CURSO"]).str.upper()
+    abi_no_nome = nome_curso.str.contains(
+        r"(?:^|[^A-Z0-9])ABI(?:[^A-Z0-9]|$)|[ÁA]REA B[ÁA]SICA DE INGRESSO",
+        regex=True,
+    )
+    abi_residual = principal[abi_no_nome]
+    resultados.append(
+        ocorrencia(
+            "ERRO",
+            "abi_residual",
+            nome,
+            "Area basica de ingresso nao deve aparecer como curso final.",
+            abi_residual,
+            coluna="NO_CURSO",
         )
     )
 
@@ -234,6 +251,102 @@ def validar_expandida(principal, expandida):
             nome,
             "Curso presente em apenas uma das duas planilhas.",
             faltantes,
+        )
+    )
+
+    for coluna in ["NO_IES", "NO_CURSO", "TP_MODALIDADE_ENSINO"]:
+        conflitos = (
+            expandida.groupby(CHAVE, dropna=False)[coluna]
+            .nunique(dropna=True)
+            .reset_index(name="QT_VALORES")
+        )
+        conflitos = conflitos[conflitos["QT_VALORES"] > 1]
+        resultados.append(
+            ocorrencia(
+                "ERRO",
+                "identificacao_diverge_entre_linhas_territoriais",
+                nome,
+                "As linhas territoriais do curso possuem identificacao divergente.",
+                conflitos,
+                coluna=coluna,
+            )
+        )
+
+    principal_n = principal[CHAVE + NUMERICAS].copy()
+    expandida_n = expandida[CHAVE + NUMERICAS].copy()
+    for coluna in NUMERICAS:
+        principal_n[coluna] = pd.to_numeric(principal_n[coluna], errors="coerce")
+        expandida_n[coluna] = pd.to_numeric(expandida_n[coluna], errors="coerce")
+
+    somas = (
+        expandida_n.groupby(CHAVE, dropna=False)[NUMERICAS]
+        .sum(min_count=1)
+        .reset_index()
+    )
+    metricas = principal_n.merge(
+        somas,
+        on=CHAVE,
+        how="outer",
+        suffixes=("_PRINCIPAL", "_EXPANDIDA"),
+    )
+    for coluna in NUMERICAS:
+        valor_principal = metricas[coluna + "_PRINCIPAL"]
+        valor_expandida = metricas[coluna + "_EXPANDIDA"]
+        divergente = valor_expandida.notna() & (
+            valor_principal.isna()
+            | ((valor_principal - valor_expandida).abs() > 1e-9)
+        )
+        casos = metricas[divergente].copy()
+        resultado = ocorrencia(
+            "ERRO",
+            "metrica_nao_reconcilia_com_expandida",
+            nome,
+            "O total da principal deve ser a soma das linhas territoriais.",
+            casos,
+            coluna=coluna,
+        )
+        if not resultado.empty:
+            resultado["VALOR"] = (
+                "principal="
+                + valor_principal.loc[casos.index].astype(str)
+                + "; expandida="
+                + valor_expandida.loc[casos.index].astype(str)
+            )
+        resultados.append(resultado)
+
+    ead = expandida[codigo(expandida["TP_MODALIDADE_ENSINO"]).eq("2")].copy()
+    dimensao = codigo(ead["TP_DIMENSAO"])
+    for coluna in NUMERICAS:
+        ead[coluna] = pd.to_numeric(ead[coluna], errors="coerce")
+    oferta_positiva = (
+        ead[["QT_VG_TOTAL", "QT_INSCRITO_TOTAL"]].fillna(0) > 0
+    ).any(axis=1)
+    oferta_fora_nacional = ead[dimensao.isin(["1", "2", "4"]) & oferta_positiva]
+    resultados.append(
+        ocorrencia(
+            "ERRO",
+            "oferta_ead_fora_dimensao_nacional",
+            nome,
+            "Vagas e inscritos EaD devem ficar apenas na dimensao nacional.",
+            oferta_fora_nacional,
+            coluna="QT_VG_TOTAL|QT_INSCRITO_TOTAL",
+        )
+    )
+
+    academicas = [coluna for coluna in NUMERICAS if coluna not in [
+        "QT_VG_TOTAL",
+        "QT_INSCRITO_TOTAL",
+    ]]
+    atividade_positiva = (ead[academicas].fillna(0) > 0).any(axis=1)
+    atividade_na_nacional = ead[dimensao.eq("3") & atividade_positiva]
+    resultados.append(
+        ocorrencia(
+            "ERRO",
+            "atividade_ead_na_dimensao_nacional",
+            nome,
+            "Indicadores academicos EaD devem ficar nas dimensoes territoriais.",
+            atividade_na_nacional,
+            coluna="|".join(academicas),
         )
     )
     return resultados

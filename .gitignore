@@ -8,6 +8,8 @@ data/processed/*
 !data/processed/oficial/*.csv
 !data/processed/validacao/
 !data/processed/validacao/*.csv
+!data/processed/curadoria/
+!data/processed/curadoria/*.csv
 
 .ipynb_checkpoints/
 .DS_Store

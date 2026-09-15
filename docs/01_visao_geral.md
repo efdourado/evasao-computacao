@@ -4,6 +4,10 @@
 
 O projeto organiza os Microdados do Censo da Educação Superior do INEP em uma base histórica de cursos de Computação/TIC, instituições e indicadores acadêmicos.
 
+As fontes efetivamente processadas são os arquivos do Censo e suas tabelas
+auxiliares. Uma extração própria do cadastro e-MEC ou um cruzamento independente
+com tabelas do IBGE não integra o processamento documentado nesta versão.
+
 A planilha oficial atual cobre **2009 a 2024**. O resultado principal possui uma linha por:
 
 ```text
@@ -20,6 +24,13 @@ CO_CINE_ROTULO = 0714E04
 ```
 
 A primeira regra seleciona a área geral **Computação e Tecnologias da Informação e Comunicação (TIC)**. A segunda inclui **Engenharia de Computação**, classificada fora da área geral 6.
+
+O processamento também seleciona nível acadêmico de graduação e filtra ABI
+(Área Básica de Ingresso) pelo atributo de ingresso ou pelo nome explícito.
+Os 11 registros de cursos interdisciplinares foram mantidos. A retirada anterior
+de quatro registros ABI e a ressalva sobre essa decisão estão registradas na
+[curadoria](04_curadoria_e_inconsistencias.md). A vistoria atual preserva a base
+recebida, sem ampliar ou reduzir novamente o recorte.
 
 ### Onde conferir
 
@@ -116,7 +127,12 @@ Na área específica 48 aparecem:
 | `483S01` | Segurança da informação |
 | `483S02` | Sistemas de informação |
 
-O código `5.23E+06` funciona como proxy histórico para Engenharia de Computação. Por isso, 2017 permanece na série, mas recebe:
+O valor bruto `5.23E+06` é a serialização de `523E04`, rótulo OCDE de
+Engenharia de Computação. A planilha oficial expõe o código normalizado
+`523E04`. Esse proxy recupera 269 linhas: 229 chamadas Engenharia de
+Computação, 36 Engenharia de Software e 4 cursos relacionados.
+
+Por isso, 2017 permanece na série, mas recebe:
 
 ```text
 DS_CLASSIFICACAO_AREA = OCDE
@@ -155,21 +171,26 @@ Assim, 2009 é o início da série oficial atual. Os anos anteriores não foram 
 
 `planilha_oficial_computacao.csv` é a base recomendada para séries históricas, contagem de cursos e análises por instituição.
 
-Ela possui **43.481 linhas** e uma única linha por ano + IES + curso. Quando o arquivo original traz o curso dividido por polos ou localidades, as métricas são somadas nessa chave e as localizações são resumidas em colunas como `QT_UFS_DISTINTAS` e `SG_UF_LISTA`.
+Ela possui **43.477 linhas** e uma única linha por ano + IES + curso. Quando o arquivo original traz o curso dividido por municípios ou localidades, as métricas são somadas nessa chave e as localizações são resumidas em colunas como `QT_UFS_DISTINTAS` e `SG_UF_LISTA`.
 
 ### Planilha expandida
 
-`planilha_oficial_computacao_expandida.csv` possui **315.414 linhas** porque preserva as linhas territoriais dos arquivos originais.
+`planilha_oficial_computacao_expandida.csv` possui **315.410 linhas** porque preserva as linhas territoriais dos arquivos originais.
 
-Um curso EaD pode aparecer uma vez para cada polo ou município. Por exemplo, um mesmo curso pode possuir mais de mil linhas territoriais, embora continue sendo apenas um curso na planilha principal.
+Um curso EaD pode aparecer uma vez para cada município associado. A planilha
+não possui identificador de polo físico. Um mesmo curso pode ter centenas de
+linhas territoriais e continuar sendo apenas um curso na principal.
 
 A expandida serve para:
 
 ```text
 mapas por UF ou município
 filtros por TP_DIMENSAO
-análises territoriais de vagas, ingressantes e matrículas
+análises territoriais de ingressantes, matrículas e concluintes
 ```
+
+Em EaD, vagas e inscritos ficam na linha nacional e não podem ser distribuídos
+por município.
 
 Ela não deve ser usada para contar cursos pela quantidade de linhas. No Power BI, deve ser relacionada à principal por:
 

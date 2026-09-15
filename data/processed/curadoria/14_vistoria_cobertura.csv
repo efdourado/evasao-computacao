@@ -1,0 +1,24 @@
+﻿REGRA;UNIDADE;QUANTIDADE
+valor_negativo_principal;linha;0
+contagem_fracionaria_principal;linha;0
+valor_nao_numerico_principal;linha;0
+valor_negativo_expandida;linha;0
+contagem_fracionaria_expandida;linha;0
+valor_nao_numerico_expandida;linha;0
+todas_metricas_informadas_zero;linha;54
+principal_com_alguma_metrica_ausente;linha;2292
+zero_matriculas_com_ingresso;linha;15
+zero_matriculas_com_concluintes;linha;0
+zero_matriculas_com_ingresso_1_a_19;linha;356
+classificacao_em_definicao;linha;18
+matriculas_caem_a_zero;linha;1098
+zero_entre_anos_com_50_ou_mais;linha;4
+salto_matriculas_5x_500;linha;16
+municipio_zero_3_anos_consecutivos;sequencia municipal;2574
+mudanca_distribuicao_municipal;transicao anual;34
+linhas_municipais_mesma_chave_e_municipio;linha;0
+ead_todos_municipios_zero;linha;53
+ead_muitos_zeros_sem_piso_matriculas;linha;560
+ead_concentracao_100_mais;linha;79
+prefixo_municipio_diverge_uf;linha;0
+nome_rotulo_triagem_anterior;linha;58

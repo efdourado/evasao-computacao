@@ -28,6 +28,10 @@ métrica quantitativa negativa
 linha geográfica duplicada
 curso presente em apenas uma das planilhas
 coluna individual, sensível ou indicador metodologicamente removido
+ABI identificado no nome do curso
+total da principal diferente da soma da expandida
+vagas/inscritos EaD fora da dimensão nacional
+indicadores acadêmicos EaD na dimensão nacional
 ```
 
 São alertas:
@@ -36,6 +40,12 @@ São alertas:
 mesmo código de IES com nomes diferentes no mesmo ano
 mesmo código de curso com nomes diferentes no mesmo ano
 ```
+
+`Erros: 0` e `Alertas: 0` significam que a estrutura produzida pela pipeline
+está íntegra. Não significam que todo valor declarado pela fonte foi confirmado.
+Nome e rótulo diferentes, valores repetidos e distribuição territorial atípica
+são tratados separadamente no
+[guia de curadoria](04_curadoria_e_inconsistencias.md).
 
 ## O que aconteceu com os 2.483 alertas antigos
 
@@ -68,8 +78,8 @@ Alertas: 0
 Além disso:
 
 ```text
-43.481 chaves distintas na planilha principal
-315.414 linhas territoriais na planilha expandida
+43.477 chaves distintas na planilha principal
+315.410 linhas territoriais na planilha expandida
 2009 a 2024 presentes
 nenhuma linha fora do recorte oficial
 nenhuma coluna individual de aluno ou docente

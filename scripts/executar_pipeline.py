@@ -14,6 +14,8 @@ ETAPAS = [
     "consolidar_situacao_academica.py",
     "gerar_planilhas_oficiais.py",
     "validar_planilhas_oficiais.py",
+    "gerar_extratos_curadoria.py",
+    "vistoriar_conteudo.py",
 ]
 
 

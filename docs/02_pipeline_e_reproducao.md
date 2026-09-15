@@ -54,9 +54,11 @@ O comando executa:
 3. criação da camada comparável por ano + IES + curso;
 4. integração dos arquivos de aluno de 2017-2019;
 5. geração das três planilhas oficiais;
-6. validação de qualidade.
+6. validação de qualidade;
+7. geração dos extratos de curadoria;
+8. vistoria de conteúdo, sequências territoriais e conferência de casos selecionados no bruto.
 
-Os intermediários ficam temporariamente em `data/processed/.pipeline/` e são removidos após uma execução bem-sucedida.
+Os intermediários ficam temporariamente em `data/processed/.pipeline/` e são removidos ao término da execução, inclusive em caso de falha. O comando completo reconstrói as planilhas oficiais; os comandos isolados de curadoria abaixo apenas as leem.
 
 ## Saídas permanentes
 
@@ -67,6 +69,7 @@ data/processed/oficial/dicionario_planilha_oficial.csv
 
 data/processed/validacao/resumo_validacao.csv
 data/processed/validacao/ocorrencias_validacao.csv
+data/processed/curadoria/*.csv
 ```
 
 ## Abrir no Data Wrangler ou Pandas
@@ -123,3 +126,29 @@ df[metricas] = df[metricas].apply(pd.to_numeric, errors="coerce")
 ```
 
 Uma execução pronta para uso deve terminar com `Erros: 0`. Qualquer detalhe fica em `data/processed/validacao/ocorrencias_validacao.csv`.
+
+## Curadoria de conteúdo
+
+A validação bloqueante acima não decide casos que exigem interpretação
+(repetição de valores, nome e rótulo diferentes, séries de baixa atividade e
+distribuição municipal EaD atípica). Para gerar as listas de conferência:
+
+```bash
+.venv/bin/python scripts/gerar_extratos_curadoria.py
+.venv/bin/python scripts/vistoriar_conteudo.py
+```
+
+Os extratos ficam em `data/processed/curadoria/` e a interpretação está em
+[docs/04_curadoria_e_inconsistencias.md](04_curadoria_e_inconsistencias.md).
+
+A vistoria acrescenta persistência de zeros, mudanças territoriais e comparação
+de casos selecionados com os arquivos brutos. A execução não modifica as
+planilhas oficiais. Os dois comandos recriam seus CSVs de saída e sobrescrevem
+edições manuais nesses arquivos. As conclusões por caso ficam no documento de
+curadoria; os status gerados nos CSVs não substituem decisões manuais de uso.
+
+Os testes das regras temporais são executados com:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
+```
