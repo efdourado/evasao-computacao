@@ -26,11 +26,22 @@ CO_CINE_ROTULO = 0714E04
 A primeira regra seleciona a área geral **Computação e Tecnologias da Informação e Comunicação (TIC)**. A segunda inclui **Engenharia de Computação**, classificada fora da área geral 6.
 
 O processamento também seleciona nível acadêmico de graduação e filtra ABI
-(Área Básica de Ingresso) pelo atributo de ingresso ou pelo nome explícito.
-Os 11 registros de cursos interdisciplinares foram mantidos. A retirada anterior
-de quatro registros ABI e a ressalva sobre essa decisão estão registradas na
-[curadoria](04_curadoria_e_inconsistencias.md). A vistoria atual preserva a base
-recebida, sem ampliar ou reduzir novamente o recorte.
+(Área Básica de Ingresso) pelo atributo de ingresso ou pelo nome explícito. O
+segundo critério existe porque o arquivo bruto do INEP nem sempre marca o
+atributo de ingresso corretamente: em 2012–2014, o curso 5.000.758 (Faculdade
+de Tecnologia de São Caetano do Sul) aparecia como "ABI - Sistemas de
+Informação" sem esse atributo preenchido, e em 2023 o curso 50.017.083 (ITA)
+aparecia como "Abi - Engenharia" do mesmo jeito. Os dois foram retirados do
+recorte pelo filtro por nome. O primeiro volta a aparecer a partir de 2015,
+quando a mesma instituição passa a declarar o mesmo código de curso como um
+Tecnólogo comum em Sistemas de Informação, sem o prefixo ABI.
+
+Os 11 registros de cursos interdisciplinares, por outro lado, foram mantidos:
+eles têm área geral de Computação/TIC e nome próprio (não usam "ABI" nem
+"Área Básica de Ingresso"), então não se encaixam na regra de exclusão. A
+vistoria atual preserva essa decisão de escopo, sem ampliar ou reduzir
+novamente o recorte; achados sobre a confiabilidade dos valores dentro do
+recorte já definido estão na [curadoria](04_curadoria_e_inconsistencias.md).
 
 ### Onde conferir
 
