@@ -16,6 +16,7 @@ ETAPAS = [
     "validar_planilhas_oficiais.py",
     "gerar_extratos_curadoria.py",
     "vistoriar_conteudo.py",
+    "gerar_camada_analise.py",
 ]
 
 

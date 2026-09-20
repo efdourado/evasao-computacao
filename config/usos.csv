@@ -1,0 +1,10 @@
+﻿USO;GRAO;PUBLICAR;METRICA_REF;EXIGE_MAT_POSITIVA;DECISAO;DESCRICAO
+CONTAGEM;curso_ano;sim;linhas;nao;D10;Contar cursos e IES cadastrados no Censo por ano. Para cursos em atividade, filtrar também QT_MAT maior que zero.
+SERIE_MAT;curso_ano;sim;QT_MAT;nao;D10;Séries de matrículas, ingressantes e concluintes agregadas por ano, região, IES ou rede.
+MAPA_MUN;municipio_ano;sim;QT_MAT;nao;D02;Mapa de matrículas, ingressantes e concluintes por município ou UF. Só linhas municipais mapeáveis.
+PRESENCA;municipio_ano;sim;linhas;sim;D08;Contar municípios com oferta. O município só conta com matrícula positiva. Não prova polo físico.
+VAGAS;curso_ano;sim;QT_VG_TOTAL;nao;D03;Vagas por curso, IES e ano. Nunca por município em EaD.
+INSCRITOS;curso_ano;exploratorio;QT_INSCRITO_TOTAL;nao;D04;Inscritos em processos seletivos, só como análise exploratória. Sem razão inscritos por vaga.
+EVASAO_SIT;curso_ano;sim;QT_SIT_DESVINCULADO;nao;D09;Contagens absolutas de desvinculados e trancados. Nenhuma razão com matrículas.
+AREA_TIPO;curso_ano;sim;linhas;nao;D10;Agrupamento por tipo de curso ou área de classificação.
+SERIE_CURSO;curso_ano;sim;QT_MAT;nao;D10;Trajetória de um mesmo curso ao longo dos anos. Usar CH_SERIE_CURSO, nunca CO_CURSO sozinho.

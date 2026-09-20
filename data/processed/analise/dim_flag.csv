@@ -1,0 +1,23 @@
+﻿FLAG;NIVEL;GRAO;FONTE;DESCRICAO
+FL_VAGAS_REPETIDAS;Suspeito;curso_ano;extrato 04;Vagas iguais ao valor que se repete em quatro ou mais cursos da mesma IES no ano.
+FL_VAGAS_IES_ANO_SUSPEITO;Suspeito;curso_ano;extrato 04;Curso de uma IES e ano em que houve repetição de vagas. Vale para todos os cursos da IES no ano.
+FL_INSCRITO_IGUAL;Suspeito;curso_ano;extrato 05;Inscritos idênticos às vagas ou aos ingressantes. A igualdade isolada não prova erro.
+FL_INSCRITO_ZERO;Suspeito;curso_ano;extrato 18;Inscritos igual a zero em ano em que o campo existe. Pode significar não informado. 2017 não tem o campo e fica de fora.
+FL_MAT_ZERO_COM_ING;Suspeito;curso_ano;extrato 13;Matrícula zero com ingressantes positivos no mesmo ano.
+FL_MAT_CAI_A_ZERO;Suspeito;curso_ano;extrato 13;Matrícula positiva no ano anterior que cai a zero no ano seguinte.
+FL_ZERO_LACUNA_50;Suspeito;curso_ano;extrato 13;Matrícula zero entre dois anos consecutivos com pelo menos 50 matrículas. Provável lacuna de declaração.
+FL_SALTO_MAT;Suspeito;curso_ano;extrato 13;Variação de pelo menos 5 vezes, ou queda a 20%, com diferença de pelo menos 500 matrículas entre anos consecutivos.
+FL_EAD_DISTRIB_ATIPICA;Suspeito;curso_ano;extrato 10;EaD com distribuição municipal atípica pela regra estreita. Pelo menos 5 municípios, com 60% ou mais zerados ou 90% ou mais da matrícula no maior município.
+FL_MUDANCA_DISTRIBUICAO;Suspeito;curso_ano;extrato 17;Mudança acentuada da distribuição municipal de matrículas em relação ao ano anterior.
+FL_NOME_ROTULO_DIVERGENTE;Suspeito;curso_ano;extrato 13;Nome do curso não bate com o rótulo de área atribuído pelo INEP.
+FL_ROTULO_EM_DEFINICAO;Suspeito;curso_ano;extrato 13;Rótulo 0619P01, classificação ainda em processo de definição pelo INEP. Só ocorre em 2024.
+FL_EAD_MUNICIPIOS_ZERADOS_AMPLA;Baixo impacto;curso_ano;extrato 13;EaD com pelo menos 5 municípios e 50% ou mais deles, ou 50 ou mais, com matrícula zero. Regra ampla e só informativa, pois pega cursos grandes e normais.
+FL_EAD_TODOS_MUN_ZERO;Baixo impacto;curso_ano;extrato 13;EaD em que todos os municípios listados têm matrícula zero.
+FL_TUDO_ZERO;Baixo impacto;curso_ano;extrato 13;Curso presente no Censo com as nove métricas iguais a zero no ano.
+FL_BAIXA_ATIVIDADE;Baixo impacto;curso_ano;extrato 08;Série longa com metade dos anos sem matrícula e poucas matrículas no total.
+FL_INTERDISCIPLINAR;Baixo impacto;curso_ano;extrato 09;Curso interdisciplinar de graduação, área geral 6, não ABI, mantido no recorte.
+FL_ROTULO_MUDA_NA_SERIE;Baixo impacto;curso_ano;extrato 02;O mesmo curso recebe rótulos de área diferentes ao longo da série.
+FL_CO_CURSO_EM_VARIAS_IES;Baixo impacto;curso_ano;extrato 03;O código do curso aparece em mais de uma IES na série, sem sobreposição de anos.
+FL_MUN_ZERO_3_ANOS;Baixo impacto;municipio_ano;extrato 16;Município com matrícula zero por três anos consecutivos ou mais no mesmo curso.
+FL_PROXY_OCDE_2017;Estrutural;curso_ano;extrato 12;Curso de 2017 incluído pelo código OCDE 523E04 de Engenharia de Computação. Classificação por aproximação.
+FL_EAD_SEM_TERRITORIO;Estrutural;curso_ano;calculada;Curso EaD sem nenhuma linha municipal na expandida, como todo o EaD de 2017 a 2019.

@@ -1,7 +1,7 @@
 """Gera as listas de conferencia da curadoria em data/processed/curadoria/.
 
 Cada arquivo e um extrato para leitura manual. Nenhum altera as planilhas
-oficiais. Documentacao: docs/04_curadoria_e_inconsistencias.md
+oficiais. Documentacao: docs/02_curadoria.md
 
 Uso:
     .venv/bin/python scripts/gerar_extratos_curadoria.py
@@ -354,6 +354,22 @@ def contradicoes_metricas(P):
     )
 
 
+def inscritos_zerados(P):
+    zerados = P[P["QT_INSCRITO_TOTAL_n"] == 0].copy()
+    zerados["ING_POSITIVO"] = np.where(zerados["QT_ING_n"] > 0, "sim", "nao")
+    zerados["DECISAO_CURADORIA"] = (
+        "manter; zero pode ser campo nao informado; nao usar em medias de demanda"
+    )
+    salvar(
+        zerados[
+            BASE_COLS
+            + ["QT_VG_TOTAL", "QT_INSCRITO_TOTAL", "QT_ING", "QT_MAT", "ING_POSITIVO", "DECISAO_CURADORIA"]
+        ],
+        "18_inscritos_zerados.csv",
+        "QT_INSCRITO_TOTAL igual a zero; o dado nao distingue zero real de campo nao informado",
+    )
+
+
 def linhas_tudo_zero(P):
     colunas = [c + "_n" for c in METRICAS]
     zerado = P[P[colunas].fillna(0).sum(axis=1) == 0].copy()
@@ -512,6 +528,7 @@ def main():
     co_curso_varias_ies(P)
     vagas_repetidas(P)
     igualdades_inscritos(P)
+    inscritos_zerados(P)
     contradicoes_metricas(P)
     linhas_tudo_zero(P)
     series_baixa_atividade(P)
