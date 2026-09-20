@@ -265,7 +265,11 @@ os dois estão certos e é o INEP tratando o curso como equivalente a outra
 categoria por causa do projeto pedagógico. Todos os três continuam dentro do
 recorte oficial (área geral de Computação/TIC). Para tipo de curso, use
 `NO_CURSO`; para agrupar por área, use `NO_ROTULO_AREA`, sabendo que os dois
-podem discordar. 21 códigos com esse padrão (34 combinações ano/rótulo) em
+podem discordar. 21 códigos com esse padrão (34 combinações ano/rótulo). Dessas, 13
+combinações, com 22 curso-anos, foram julgadas compatíveis por nome composto ou histórico e
+ficam só na lista. A flag da etapa 3 marca os 36 curso-anos das outras 21 combinações. Essa decisão caso a caso vive em
+`config/curadoria_nome_rotulo.csv`, e um caso novo aparece no extrato como "revisar em nova
+rodada" até alguém decidir. Lista em
 [`01_nome_curso_x_rotulo_divergente.csv`](../data/processed/curadoria/01_nome_curso_x_rotulo_divergente.csv).
 
 ### 2.6 Rótulo declarado "em processo de definição" (18 casos, todos em 2024)

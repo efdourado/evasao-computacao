@@ -1,6 +1,10 @@
 from pathlib import Path
+import sys
 
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from anos import anos_cadastro_cursos  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,21 +19,7 @@ ROTULO_ENGENHARIA_COMPUTACAO = "0714E04"
 OCDE_PROXY_ENGENHARIA_COMPUTACAO = "5.23E+06"
 OCDE_ROTULO_ENGENHARIA_COMPUTACAO = "523E04"
 OCDE_NOME_ENGENHARIA_COMPUTACAO = "Engenharia de computação"
-ANOS_CADASTRO_CINE = [
-    "2009",
-    "2010",
-    "2011",
-    "2012",
-    "2013",
-    "2014",
-    "2015",
-    "2016",
-    "2020",
-    "2021",
-    "2022",
-    "2023",
-    "2024",
-]
+ANOS_CADASTRO_CINE = anos_cadastro_cursos()
 
 MAPA_UF = {
     "11": "RO",
@@ -294,6 +284,46 @@ def finalizar(df):
     return df[COLUNAS_SAIDA]
 
 
+COLUNAS_CURSOS_LEITURA = [
+    "NU_ANO_CENSO",
+    "CO_IES",
+    "CO_CURSO",
+    "NO_CURSO",
+    "NO_CINE_ROTULO",
+    "CO_CINE_ROTULO",
+    "CO_CINE_ROTULO2",
+    "CO_CINE_AREA_GERAL",
+    "NO_CINE_AREA_GERAL",
+    "CO_CINE_AREA_ESPECIFICA",
+    "NO_CINE_AREA_ESPECIFICA",
+    "CO_CINE_AREA_DETALHADA",
+    "NO_CINE_AREA_DETALHADA",
+    "TP_GRAU_ACADEMICO",
+    "TP_MODALIDADE_ENSINO",
+    "TP_DIMENSAO",
+    "TP_REDE",
+    "TP_CATEGORIA_ADMINISTRATIVA",
+    "TP_ORGANIZACAO_ACADEMICA",
+    "TP_NIVEL_ACADEMICO",
+    "TP_ATRIBUTO_INGRESSO",
+    "NO_REGIAO",
+    "CO_UF",
+    "SG_UF",
+    "CO_MUNICIPIO",
+    "NO_MUNICIPIO",
+    "QT_VG_TOTAL",
+    "QT_INSCRITO_TOTAL",
+    "QT_ING",
+    "QT_MAT",
+    "QT_CONC",
+    "QT_SIT_TRANCADA",
+    "QT_SIT_DESVINCULADO",
+    "QT_SIT_TRANSFERIDO",
+    "QT_SIT_FALECIDO",
+]
+COLUNAS_IES_LEITURA = ["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"]
+
+
 def processar_ano_novo(ano):
     ano = str(ano)
     arq_cursos = encontrar_arquivo(ano, [f"MICRODADOS_CADASTRO_CURSOS_{ano}.CSV"])
@@ -312,43 +342,7 @@ def processar_ano_novo(ano):
         print(f"[{ano}] Arquivo de IES não encontrado.")
         return pd.DataFrame()
 
-    cols_cursos = [
-        "NU_ANO_CENSO",
-        "CO_IES",
-        "CO_CURSO",
-        "NO_CURSO",
-        "NO_CINE_ROTULO",
-        "CO_CINE_ROTULO",
-        "CO_CINE_ROTULO2",
-        "CO_CINE_AREA_GERAL",
-        "NO_CINE_AREA_GERAL",
-        "CO_CINE_AREA_ESPECIFICA",
-        "NO_CINE_AREA_ESPECIFICA",
-        "CO_CINE_AREA_DETALHADA",
-        "NO_CINE_AREA_DETALHADA",
-        "TP_GRAU_ACADEMICO",
-        "TP_MODALIDADE_ENSINO",
-        "TP_DIMENSAO",
-        "TP_REDE",
-        "TP_CATEGORIA_ADMINISTRATIVA",
-        "TP_ORGANIZACAO_ACADEMICA",
-        "TP_NIVEL_ACADEMICO",
-        "TP_ATRIBUTO_INGRESSO",
-        "NO_REGIAO",
-        "CO_UF",
-        "SG_UF",
-        "CO_MUNICIPIO",
-        "NO_MUNICIPIO",
-        "QT_VG_TOTAL",
-        "QT_INSCRITO_TOTAL",
-        "QT_ING",
-        "QT_MAT",
-        "QT_CONC",
-        "QT_SIT_TRANCADA",
-        "QT_SIT_DESVINCULADO",
-        "QT_SIT_TRANSFERIDO",
-        "QT_SIT_FALECIDO",
-    ]
+    cols_cursos = COLUNAS_CURSOS_LEITURA
     cursos = read_csv_disponivel(arq_cursos, cols_cursos)
     for col in cols_cursos:
         if col not in cursos.columns:
@@ -362,7 +356,7 @@ def processar_ano_novo(ano):
 
     cursos = cursos[filtro_graduacao_sem_abi(cursos)].copy()
 
-    cols_ies = ["NU_ANO_CENSO", "CO_IES", "NO_IES", "SG_IES"]
+    cols_ies = COLUNAS_IES_LEITURA
     ies = read_csv_disponivel(arq_ies, cols_ies)
     for col in cols_ies:
         if col not in ies.columns:

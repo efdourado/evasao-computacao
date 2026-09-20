@@ -47,31 +47,19 @@ BASE_COLS = [
     "DS_CRITERIO_ESCOPO",
 ]
 
-CURSOS_NOME_ROTULO_COMPATIVEL = {
-    "40165",
-    "45313",
-    "45480",
-    "45578",
-    "45668",
-    "48267",
-    "58366",
-    "89748",
-    "95799",
-    "114270",
-    "1457818",
-}
-CURSOS_NOME_ROTULO_DIVERGENTE = {
-    "9586",
-    "18733",
-    "91868",
-    "1110857",
-    "1292285",
-    "1322074",
-    "1585464",
-    "1597254",
-    "1616602",
-}
-CURSOS_COM_MUDANCA_HISTORICA_CONFIRMADA = {"122634"}
+CONFIG_NOME_ROTULO = ROOT / "config" / "curadoria_nome_rotulo.csv"
+
+
+def _cursos_por_resultado():
+    """Decisoes manuais sobre nome x rotulo, editaveis em config/curadoria_nome_rotulo.csv."""
+    df = pd.read_csv(CONFIG_NOME_ROTULO, sep=";", encoding="utf-8-sig", dtype=str)
+    return {r: set(g["CO_CURSO"]) for r, g in df.groupby("RESULTADO")}
+
+
+_DECISOES_NOME_ROTULO = _cursos_por_resultado()
+CURSOS_NOME_ROTULO_COMPATIVEL = _DECISOES_NOME_ROTULO.get("compativel", set())
+CURSOS_NOME_ROTULO_DIVERGENTE = _DECISOES_NOME_ROTULO.get("divergente", set())
+CURSOS_COM_MUDANCA_HISTORICA_CONFIRMADA = _DECISOES_NOME_ROTULO.get("mudanca_historica", set())
 
 
 

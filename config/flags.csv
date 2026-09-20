@@ -9,7 +9,7 @@ FL_ZERO_LACUNA_50;Suspeito;curso_ano;extrato 13;Matrícula zero entre dois anos 
 FL_SALTO_MAT;Suspeito;curso_ano;extrato 13;Variação de pelo menos 5 vezes, ou queda a 20%, com diferença de pelo menos 500 matrículas entre anos consecutivos.
 FL_EAD_DISTRIB_ATIPICA;Suspeito;curso_ano;extrato 10;EaD com distribuição municipal atípica pela regra estreita. Pelo menos 5 municípios, com 60% ou mais zerados ou 90% ou mais da matrícula no maior município.
 FL_MUDANCA_DISTRIBUICAO;Suspeito;curso_ano;extrato 17;Mudança acentuada da distribuição municipal de matrículas em relação ao ano anterior.
-FL_NOME_ROTULO_DIVERGENTE;Suspeito;curso_ano;extrato 13;Nome do curso não bate com o rótulo de área atribuído pelo INEP.
+FL_NOME_ROTULO_DIVERGENTE;Suspeito;curso_ano;extrato 01;Nome do curso não bate com o rótulo de área do INEP, depois de descartados os casos que a curadoria julgou compatíveis por nome composto ou histórico.
 FL_ROTULO_EM_DEFINICAO;Suspeito;curso_ano;extrato 13;Rótulo 0619P01, classificação ainda em processo de definição pelo INEP. Só ocorre em 2024.
 FL_EAD_MUNICIPIOS_ZERADOS_AMPLA;Baixo impacto;curso_ano;extrato 13;EaD com pelo menos 5 municípios e 50% ou mais deles, ou 50 ou mais, com matrícula zero. Regra ampla e só informativa, pois pega cursos grandes e normais.
 FL_EAD_TODOS_MUN_ZERO;Baixo impacto;curso_ano;extrato 13;EaD em que todos os municípios listados têm matrícula zero.

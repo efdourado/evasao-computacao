@@ -1,12 +1,13 @@
 # Etapa 1: dados do INEP e recorte
 
-O projeto segue um fluxo em três etapas, cada uma com um documento:
+O projeto segue um fluxo em quatro etapas, cada uma com um documento:
 
 | Etapa | O que faz | Documento |
 | --- | --- | --- |
 | 1. Recorte | Pega os microdados do INEP e seleciona os cursos de Computação/TIC | este documento |
 | 2. Curadoria | Examina o recorte em busca de valores e classificações suspeitos | [02_curadoria.md](02_curadoria.md) |
-| 3. Manual de uso | Decide como cada achado afeta cada análise e entrega tabelas prontas com flags | [03_manual_de_uso.md](03_manual_de_uso.md) |
+| 3. Manual de uso | Decide como cada achado afeta cada análise e entrega tabelas prontas com flags e explicações | [03_manual_de_uso.md](03_manual_de_uso.md) |
+| 4. Novos anos | Alimenta tudo isso com cada novo Censo do INEP, com checagens automáticas | [04_novos_anos.md](04_novos_anos.md) |
 
 Este documento cobre a etapa 1: de onde vêm os dados, quais regras definem o
 recorte, como são as planilhas oficiais, como validá-las e como reproduzir tudo.
@@ -37,15 +38,15 @@ CO_CINE_ROTULO = 0714E04
 A primeira regra seleciona a área geral **Computação e Tecnologias da Informação e Comunicação (TIC)**. A segunda inclui **Engenharia de Computação**, classificada fora da área geral 6.
 
 O processamento também seleciona nível acadêmico de graduação e filtra ABI
-(Área Básica de Ingresso) pelo atributo de ingresso ou pelo nome explícito. O
-segundo critério existe porque o arquivo bruto do INEP nem sempre marca o
-atributo de ingresso corretamente: em 2012–2014, o curso 5.000.758 (Faculdade
-de Tecnologia de São Caetano do Sul) aparecia como "ABI - Sistemas de
-Informação" sem esse atributo preenchido, e em 2023 o curso 50.017.083 (ITA)
-aparecia como "Abi - Engenharia" do mesmo jeito. Os dois foram retirados do
-recorte pelo filtro por nome. O primeiro volta a aparecer a partir de 2015,
-quando a mesma instituição passa a declarar o mesmo código de curso como um
-Tecnólogo comum em Sistemas de Informação, sem o prefixo ABI.
+(Área Básica de Ingresso). O atributo de ingresso do INEP, `TP_ATRIBUTO_INGRESSO`,
+só existe nos arquivos de 2017 a 2019. Nos outros 13 anos a única marca de ABI é o nome
+do curso, então o filtro por nome é o que vale em 2009 a 2016 e de 2020 em diante. Dois
+exemplos: em 2012 a 2014, o curso 5.000.758 (Faculdade de Tecnologia de São Caetano do
+Sul) se chamava "ABI - Sistemas de Informação", e em 2023 o curso 50.017.083 (ITA) se
+chamava "Abi - Engenharia". Os dois foram retirados do recorte pelo nome. O primeiro volta a
+aparecer a partir de 2015, quando a mesma instituição passa a declarar o mesmo código como
+um Tecnólogo comum em Sistemas de Informação, sem o prefixo ABI. Em anos novos vale a
+mesma regra, e a validação recusa qualquer curso com ABI no nome.
 
 Os 11 registros de cursos interdisciplinares, por outro lado, foram mantidos:
 eles têm área geral de Computação/TIC e nome próprio (não usam "ABI" nem
@@ -252,6 +253,7 @@ A validação estrutural é executada ao fim do recorte ou isoladamente com:
 | --- | --- |
 | `resumo_validacao.csv` | status geral, dimensões das bases e contagens principais |
 | `ocorrencias_validacao.csv` | cada erro ou alerta com ano, IES, curso e descrição |
+| `continuidade_anual.csv` | por ano: cursos, IES, matrículas, variação sobre o ano anterior, cursos novos e que sumiram |
 
 Não é mais gerado um relatório Markdown automático. Este documento concentra a interpretação; os CSVs guardam o resultado executado.
 
@@ -262,7 +264,9 @@ São erros bloqueantes:
 ```text
 duplicata na chave ano + IES + curso da planilha principal
 campo obrigatório vazio
-ano fora de 2009-2024
+ano fora dos anos registrados em config/anos.csv
+ano registrado sem nenhuma linha
+variação entre anos acima do limite de erro (config/limites_continuidade.csv)
 curso fora do recorte CINE/OCDE
 métrica quantitativa negativa
 linha geográfica duplicada
@@ -279,6 +283,7 @@ São alertas:
 ```text
 mesmo código de IES com nomes diferentes no mesmo ano
 mesmo código de curso com nomes diferentes no mesmo ano
+variação entre anos acima do limite de alerta
 ```
 
 `Erros: 0` e `Alertas: 0` significam que a estrutura produzida pela pipeline
@@ -376,17 +381,19 @@ Na raiz do repositório:
 .venv/bin/python scripts/executar_pipeline.py
 ```
 
-O comando executa as três etapas em sequência:
+O comando executa as três primeiras etapas em sequência:
 
 | Etapa | Passos |
 | --- | --- |
 | 1. Recorte | leitura e padronização dos arquivos de curso e IES; recorte CINE/OCDE; camada comparável por ano + IES + curso; integração dos arquivos de aluno de 2017-2019; geração das planilhas oficiais; validação estrutural |
 | 2. Curadoria | geração dos extratos de curadoria; vistoria de conteúdo, sequências territoriais e conferência de casos selecionados no bruto |
-| 3. Manual de uso | camada de análise: flags, regras de uso por análise e tabelas prontas para o Power BI |
+| 3. Manual de uso | camada de análise: flags, regras de uso por análise, tabelas prontas para o Power BI e explicação de cada registro em português simples |
 
 Cada etapa pode ser executada isoladamente (`scripts/validar_planilhas_oficiais.py`,
 `scripts/gerar_extratos_curadoria.py`, `scripts/vistoriar_conteudo.py`,
-`scripts/gerar_camada_analise.py`). A camada de análise só lê as planilhas oficiais e
+`scripts/gerar_camada_analise.py`, `scripts/gerar_transparencia.py`). A quarta etapa não é um
+passo do pipeline: é o procedimento para trazer um ano novo, descrito em
+[04_novos_anos.md](04_novos_anos.md). A camada de análise só lê as planilhas oficiais e
 os extratos da curadoria. Os intermediários ficam temporariamente em `data/processed/.pipeline/` e são removidos ao término da execução, inclusive em caso de falha. O comando completo reconstrói as planilhas oficiais; os comandos isolados das etapas 2 e 3 apenas as leem e recriam seus próprios CSVs, sobrescrevendo edições manuais feitas neles.
 
 ### Saídas permanentes
@@ -398,6 +405,7 @@ data/processed/oficial/dicionario_planilha_oficial.csv
 
 data/processed/validacao/resumo_validacao.csv
 data/processed/validacao/ocorrencias_validacao.csv
+data/processed/validacao/continuidade_anual.csv
 data/processed/curadoria/*.csv
 data/processed/analise/*.csv
 ```

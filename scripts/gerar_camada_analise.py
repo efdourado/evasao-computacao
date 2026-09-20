@@ -8,8 +8,8 @@ IN_USO_<ANALISE>, nunca a remocao de uma linha.
 Saidas em data/processed/analise/:
     fato_curso_ano.csv          principal + flags + IN_USO_* (uma linha por curso e ano)
     fato_municipio_ano.csv      linhas municipais mapeaveis + flags herdadas + IN_USO_*
-    dim_flag.csv                catalogo de flags
-    dim_uso.csv                 catalogo de analises
+    dim_flag.csv                catalogo de flags, com o texto explicativo em portugues simples
+    dim_uso.csv                 catalogo de analises, com o aviso que cada grafico deve exibir
     matriz_flag_uso.csv         tratamento de cada flag em cada analise (formato longo)
     cobertura_uso.csv           quanto cada analise usa, exclui e nao tem por ano
     decisoes_manuais_aplicadas.csv  efeito de cada excecao de config/decisoes_manuais.csv
@@ -47,6 +47,8 @@ TRATAMENTOS = {"excluir", "sinalizar", "-"}
 NIVEIS = {"Suspeito": 2, "Baixo impacto": 1, "Estrutural": 1}
 GRAOS = {"curso_ano", "municipio_ano"}
 PUBLICAR = {"sim", "exploratorio", "nao"}
+GRAVIDADES = ["Sem observações", "Informação", "Atenção", "Alerta"]
+COLUNAS_TEXTO = ["TITULO", "O_QUE_E", "POR_QUE_IMPORTA", "O_QUE_FAZER", "ONDE_LER_MAIS"]
 
 # regra da vistoria (extrato 13) -> flag de nivel curso e ano
 REGRAS_VISTORIA = {
@@ -57,7 +59,6 @@ REGRAS_VISTORIA = {
     "zero_entre_anos_com_50_ou_mais": "FL_ZERO_LACUNA_50",
     "salto_matriculas_5x_500": "FL_SALTO_MAT",
     "classificacao_em_definicao": "FL_ROTULO_EM_DEFINICAO",
-    "nome_rotulo_triagem_anterior": "FL_NOME_ROTULO_DIVERGENTE",
     "ead_todos_municipios_zero": "FL_EAD_TODOS_MUN_ZERO",
     "ead_muitos_zeros_sem_piso_matriculas": "FL_EAD_MUNICIPIOS_ZERADOS_AMPLA",
     "mudanca_distribuicao_municipal": "FL_MUDANCA_DISTRIBUICAO",
@@ -89,6 +90,102 @@ def carregar_config():
     return flags, usos, matriz.set_index("FLAG"), decisoes
 
 
+def carregar_textos(flags):
+    """Textos em portugues simples de cada flag e configuracao do portal."""
+    textos = ler(CONFIG / "textos_flags.csv")
+    if set(textos["FLAG"]) != set(flags["FLAG"]) or textos["FLAG"].duplicated().any():
+        dif = set(textos["FLAG"]) ^ set(flags["FLAG"])
+        raise ErroConfiguracao(f"textos_flags.csv e flags.csv divergem em {sorted(dif)}")
+    for coluna in COLUNAS_TEXTO:
+        vazias = textos.loc[textos[coluna].str.strip() == "", "FLAG"].tolist()
+        if vazias:
+            raise ErroConfiguracao(f"textos_flags.csv sem {coluna} em {vazias}")
+    portal = dict(ler(CONFIG / "portal.csv")[["CHAVE", "VALOR"]].itertuples(index=False))
+    return textos.set_index("FLAG"), portal
+
+
+def lista_pt(itens):
+    """Junta itens em portugues: a, b e c."""
+    itens = list(itens)
+    if len(itens) <= 1:
+        return "".join(itens)
+    return ", ".join(itens[:-1]) + " e " + itens[-1]
+
+
+def derivar_efeitos(flags, textos, matriz, usos, portal):
+    """O que o painel faz com cada flag, derivado da matriz para nunca contradize-la."""
+    nome = usos.set_index("USO")["NOME_AMIGAVEL"]
+    nivel = flags.set_index("FLAG")["NIVEL"]
+    contato = portal.get("CONTATO_PROJETO", "").strip()
+    linhas = []
+    for flag in flags["FLAG"]:
+        celulas = matriz.loc[flag]
+        fora = [nome[u] for u in nome.index if celulas[u] == "excluir"]
+        aviso = [nome[u] for u in nome.index if celulas[u] == "sinalizar"]
+        if fora:
+            gravidade = "Alerta"
+        elif nivel[flag] == "Suspeito":
+            gravidade = "Atenção"
+        else:
+            gravidade = "Informação"
+        partes = []
+        if fora:
+            partes.append("Fica de fora de: " + lista_pt(fora) + ".")
+        if aviso:
+            partes.append("Aparece com aviso em: " + lista_pt(aviso) + ".")
+        if not partes:
+            partes.append("Não altera nenhum gráfico. É só informativo.")
+        fazer = textos.loc[flag, "O_QUE_FAZER"]
+        if contato:
+            fazer += f" Se preferir, fale com a equipe do projeto: {contato}."
+        linhas.append(
+            {
+                "FLAG": flag,
+                "TITULO": textos.loc[flag, "TITULO"],
+                "GRAVIDADE": gravidade,
+                "NV": GRAVIDADES.index(gravidade),
+                "FICA_DE_FORA_DE": lista_pt(fora),
+                "APARECE_COM_AVISO_EM": lista_pt(aviso),
+                "COMO_TRATAMOS": " ".join(partes),
+                "O_QUE_FAZER": fazer,
+            }
+        )
+    return pd.DataFrame(linhas).set_index("FLAG")
+
+
+def montar_dim_flag(flags, textos, efeitos):
+    saida = flags.set_index("FLAG").join(
+        textos[["O_QUE_E", "POR_QUE_IMPORTA", "ONDE_LER_MAIS"]]
+    ).join(
+        efeitos[["TITULO", "GRAVIDADE", "COMO_TRATAMOS", "FICA_DE_FORA_DE",
+                 "APARECE_COM_AVISO_EM", "O_QUE_FAZER"]]
+    ).reset_index()
+    saida = saida.rename(columns={"DESCRICAO": "DESCRICAO_TECNICA"})
+    return saida[["FLAG", "TITULO", "GRAVIDADE", "O_QUE_E", "POR_QUE_IMPORTA", "COMO_TRATAMOS",
+                  "FICA_DE_FORA_DE", "APARECE_COM_AVISO_EM", "O_QUE_FAZER", "ONDE_LER_MAIS",
+                  "NIVEL", "GRAO", "FONTE", "DESCRICAO_TECNICA"]]
+
+
+def montar_dim_uso(usos, matriz, efeitos):
+    """Aviso que todo grafico de uma analise deve exibir, derivado da matriz."""
+    linhas = []
+    for _, uso in usos.iterrows():
+        u = uso["USO"]
+        fora = [efeitos.loc[f, "TITULO"] for f in matriz.index if matriz.loc[f, u] == "excluir"]
+        aviso = [efeitos.loc[f, "TITULO"] for f in matriz.index if matriz.loc[f, u] == "sinalizar"]
+        partes = []
+        partes.append("Fica de fora deste gráfico: " + "; ".join(fora) + "." if fora
+                      else "Nenhum registro fica de fora deste gráfico por regra.")
+        if aviso:
+            partes.append("Aparece com aviso: " + "; ".join(aviso) + ".")
+        linha = uso.to_dict()
+        linha["FICA_DE_FORA_DESTE_GRAFICO"] = "; ".join(fora)
+        linha["COM_AVISO_NESTE_GRAFICO"] = "; ".join(aviso)
+        linha["AVISO_DO_GRAFICO"] = " ".join(partes)
+        linhas.append(linha)
+    return pd.DataFrame(linhas)
+
+
 def validar_config(flags, usos, matriz, decisoes):
     """Falha cedo quando a configuracao editada a mao esta inconsistente."""
     if flags["FLAG"].duplicated().any():
@@ -101,6 +198,8 @@ def validar_config(flags, usos, matriz, decisoes):
         raise ErroConfiguracao("GRAO invalido em usos.csv")
     if not set(usos["PUBLICAR"]) <= PUBLICAR:
         raise ErroConfiguracao("PUBLICAR invalido em usos.csv")
+    if (usos["NOME_AMIGAVEL"].str.strip() == "").any():
+        raise ErroConfiguracao("NOME_AMIGAVEL vazio em usos.csv")
     if set(matriz["FLAG"]) != set(flags["FLAG"]):
         dif = set(matriz["FLAG"]) ^ set(flags["FLAG"])
         raise ErroConfiguracao(f"flags.csv e matriz_flag_uso.csv divergem em {sorted(dif)}")
@@ -134,6 +233,21 @@ def chaves_marcadas(df, chaves, colunas=CHAVE):
     return pd.MultiIndex.from_frame(df[colunas].astype(str)).isin(alvo)
 
 
+def divergencia_nome_rotulo(P):
+    """Nome x rotulo: descarta o que a curadoria julgou compativel (nome composto ou historico)."""
+    e01 = ler(CURADORIA / "01_nome_curso_x_rotulo_divergente.csv")
+    reais = e01[~e01["RESULTADO_CURADORIA"].str.startswith("compativel")]
+    chave = ["CO_IES", "CO_CURSO", "NO_CURSO", "NO_ROTULO_AREA"]
+    base = P[chave + ["NU_ANO_CENSO"]].assign(POS=np.arange(len(P)))
+    casados = base.merge(reais[chave + ["ANO_INICIAL", "ANO_FINAL"]], on=chave)
+    ano = casados["NU_ANO_CENSO"].astype(int)
+    dentro = casados[(ano >= casados["ANO_INICIAL"].astype(int)) & (ano <= casados["ANO_FINAL"].astype(int))]
+    esperado = int(reais["QT_ANOS"].astype(int).sum())
+    if len(dentro) != esperado:
+        raise ErroConfiguracao(f"divergencia nome x rotulo: {len(dentro)} linhas contra {esperado} do extrato 01")
+    return np.isin(np.arange(len(P)), dentro["POS"].to_numpy())
+
+
 def calcular_flags_curso(P, E):
     """Flags de nivel curso e ano. Devolve DataFrame booleano alinhado a P."""
     F = pd.DataFrame(index=P.index)
@@ -142,6 +256,7 @@ def calcular_flags_curso(P, E):
         marcado = chaves_marcadas(P, vistoria[vistoria["REGRA"] == regra])
         F[flag] = F[flag] | marcado if flag in F else marcado
 
+    F["FL_NOME_ROTULO_DIVERGENTE"] = divergencia_nome_rotulo(P)
     F["FL_INSCRITO_ZERO"] = chaves_marcadas(P, ler(CURADORIA / "18_inscritos_zerados.csv"))
     F["FL_INSCRITO_IGUAL"] = chaves_marcadas(P, ler(CURADORIA / "05_igualdades_inscritos.csv"))
     F["FL_BAIXA_ATIVIDADE"] = chaves_marcadas(P, ler(CURADORIA / "08_series_baixa_atividade.csv"))
@@ -186,15 +301,20 @@ def calcular_flag_municipal(M):
     return pd.DataFrame({"FL_MUN_ZERO_3_ANOS": chaves_marcadas(M, marcadas, cols)}, index=M.index)
 
 
-def nivel_e_lista(F, flags_cfg):
-    """NV_ATENCAO (0 nada, 1 nota, 2 suspeita), QT_FLAGS e DS_FLAGS por linha."""
-    colunas = [f for f in F.columns]
-    nivel = flags_cfg.set_index("FLAG").loc[colunas, "NIVEL"].map(NIVEIS).to_numpy()
+def resumo_observacoes(F, efeitos):
+    """NV_ATENCAO (0 a 3), quantidade, codigos e titulos das flags de cada linha, do mais grave ao menos."""
+    colunas = list(F.columns)
+    nv_flag = efeitos.loc[colunas, "NV"].to_numpy()
+    ordem = np.argsort(-nv_flag, kind="stable")
     valores = F.to_numpy(dtype=bool)
-    nv = (valores * nivel).max(axis=1) if len(colunas) else np.zeros(len(F), dtype=int)
-    nomes = np.array([c.removeprefix("FL_") for c in colunas])
-    lista = ["|".join(nomes[linha]) for linha in valores]
-    return nv.astype(int), valores.sum(axis=1).astype(int), lista
+    nv = (valores * nv_flag).max(axis=1) if len(colunas) else np.zeros(len(F), dtype=int)
+    codigos = np.array([c.removeprefix("FL_") for c in colunas], dtype=object)[ordem]
+    titulos = efeitos.loc[colunas, "TITULO"].to_numpy(dtype=object)[ordem]
+    ordenados = valores[:, ordem]
+    ds_flags = ["|".join(codigos[linha]) for linha in ordenados]
+    ds_obs = [" • ".join(titulos[linha]) for linha in ordenados]
+    gravidade = np.array(GRAVIDADES, dtype=object)[nv]
+    return nv.astype(int), valores.sum(axis=1).astype(int), ds_flags, ds_obs, gravidade
 
 
 # ---------------------------------------------------------- regras de uso
@@ -343,6 +463,8 @@ def conferir_contra_curadoria(F):
 def main():
     SAIDA.mkdir(parents=True, exist_ok=True)
     flags_cfg, usos_cfg, matriz, decisoes = carregar_config()
+    textos, portal = carregar_textos(flags_cfg)
+    efeitos = derivar_efeitos(flags_cfg, textos, matriz, usos_cfg, portal)
 
     P = ler(OFICIAL / "planilha_oficial_computacao.csv")
     E = ler(OFICIAL / "planilha_oficial_computacao_expandida.csv")
@@ -357,7 +479,7 @@ def main():
     if set(flags_curso) != set(F.columns):
         raise ErroConfiguracao(f"flags calculadas divergem de flags.csv: {set(flags_curso) ^ set(F.columns)}")
     F = F[flags_curso]
-    nv, qt, lista = nivel_e_lista(F, flags_cfg)
+    nv, qt, lista, obs, gravidade = resumo_observacoes(F, efeitos)
 
     # municipal
     mapeavel = E["IN_USAR_MAPA_MUNICIPAL"].str.lower() == "true"
@@ -378,7 +500,9 @@ def main():
         P_out[flag] = F[flag].astype(int).to_numpy()
     P_out["QT_FLAGS"] = qt
     P_out["NV_ATENCAO"] = nv
+    P_out["GRAVIDADE"] = gravidade
     P_out["DS_FLAGS"] = lista
+    P_out["DS_OBSERVACOES"] = obs
 
     registros_manuais, coberturas = [], []
     M_out = M[
@@ -388,9 +512,17 @@ def main():
          "QT_MAT", "QT_CONC", "QT_SIT_TRANCADA", "QT_SIT_DESVINCULADO",
          "QT_SIT_TRANSFERIDO", "QT_SIT_FALECIDO"]
     ].copy()
-    M_out["NV_ATENCAO_CURSO"] = nv[pos_m]
-    M_out["DS_FLAGS_CURSO"] = np.array(lista, dtype=object)[pos_m]
-    M_out["FL_MUN_ZERO_3_ANOS"] = FM["FL_MUN_ZERO_3_ANOS"].astype(int).to_numpy()
+    mun = FM["FL_MUN_ZERO_3_ANOS"].to_numpy()
+    nv_mun = int(efeitos.loc["FL_MUN_ZERO_3_ANOS", "NV"])
+    titulo_mun = efeitos.loc["FL_MUN_ZERO_3_ANOS", "TITULO"]
+    nv_m = np.maximum(nv[pos_m], np.where(mun, nv_mun, 0))
+    ds_flags_m = np.array(lista, dtype=object)[pos_m]
+    obs_m = np.array(obs, dtype=object)[pos_m]
+    M_out["NV_ATENCAO"] = nv_m
+    M_out["GRAVIDADE"] = np.array(GRAVIDADES, dtype=object)[nv_m]
+    M_out["DS_FLAGS"] = np.where(mun, np.where(ds_flags_m == "", "MUN_ZERO_3_ANOS", ds_flags_m + "|MUN_ZERO_3_ANOS"), ds_flags_m)
+    M_out["DS_OBSERVACOES"] = np.where(mun, np.where(obs_m == "", titulo_mun, obs_m + " • " + titulo_mun), obs_m)
+    M_out["FL_MUN_ZERO_3_ANOS"] = mun.astype(int)
 
     # matricula sem territorio (estrutural) por ano e modalidade, para a cobertura municipal
     fora = E[~mapeavel]
@@ -434,8 +566,12 @@ def main():
     # saidas
     P_out.to_csv(SAIDA / "fato_curso_ano.csv", sep=";", index=False, encoding="utf-8-sig")
     M_out.to_csv(SAIDA / "fato_municipio_ano.csv", sep=";", index=False, encoding="utf-8-sig")
-    flags_cfg.to_csv(SAIDA / "dim_flag.csv", sep=";", index=False, encoding="utf-8-sig")
-    usos_cfg.to_csv(SAIDA / "dim_uso.csv", sep=";", index=False, encoding="utf-8-sig")
+    montar_dim_flag(flags_cfg, textos, efeitos).to_csv(
+        SAIDA / "dim_flag.csv", sep=";", index=False, encoding="utf-8-sig"
+    )
+    montar_dim_uso(usos_cfg, matriz, efeitos).to_csv(
+        SAIDA / "dim_uso.csv", sep=";", index=False, encoding="utf-8-sig"
+    )
     longa = matriz.reset_index().melt(
         id_vars=["FLAG", "DECISAO"], var_name="USO", value_name="TRATAMENTO"
     )

@@ -1,0 +1,4 @@
+﻿METRICA;ALERTA_PCT;ERRO_PCT;DESCRICAO
+LINHAS;20;40;Variação do número de cursos em relação ao ano anterior. Erro quando o ano some ou dobra sem explicação.
+MATRICULAS;35;60;Variação da matrícula total em relação ao ano anterior.
+IES;15;30;Variação do número de instituições em relação ao ano anterior.

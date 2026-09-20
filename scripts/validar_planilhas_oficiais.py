@@ -3,6 +3,9 @@ import sys
 
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from anos import anos_todos, carregar_anos  # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parents[1]
 OFICIAL = ROOT / "data" / "processed" / "oficial"
@@ -12,6 +15,8 @@ ARQ_PRINCIPAL = OFICIAL / "planilha_oficial_computacao.csv"
 ARQ_EXPANDIDA = OFICIAL / "planilha_oficial_computacao_expandida.csv"
 SAIDA_RESUMO = VALIDACAO / "resumo_validacao.csv"
 SAIDA_OCORRENCIAS = VALIDACAO / "ocorrencias_validacao.csv"
+SAIDA_CONTINUIDADE = VALIDACAO / "continuidade_anual.csv"
+ARQ_LIMITES = ROOT / "config" / "limites_continuidade.csv"
 
 CHAVE = ["NU_ANO_CENSO", "CO_IES", "CO_CURSO"]
 CHAVE_EXPANDIDA = CHAVE + [
@@ -41,7 +46,7 @@ COLUNAS_PROIBIDAS = [
     "NU_CPF",
     "TX_DESVINCULADO_SOBRE_MAT",
 ]
-ANOS = {str(ano) for ano in range(2009, 2025)}
+ANOS = set(anos_todos())
 COLUNAS_OCORRENCIA = [
     "NIVEL",
     "VALIDACAO",
@@ -133,7 +138,7 @@ def validar_principal(principal):
             "ERRO",
             "ano_fora_da_serie_oficial",
             nome,
-            "A serie oficial aceita apenas 2009 a 2024.",
+            f"A serie oficial aceita apenas os anos registrados em config/anos.csv ({min(ANOS)} a {max(ANOS)}).",
             anos_invalidos,
             coluna="NU_ANO_CENSO",
         )
@@ -377,6 +382,76 @@ def validar_colunas(dfs):
     return pd.DataFrame(linhas, columns=COLUNAS_OCORRENCIA)
 
 
+def carregar_limites(caminho=ARQ_LIMITES):
+    df = pd.read_csv(caminho, sep=";", encoding="utf-8-sig", dtype=str)
+    return {l["METRICA"]: (float(l["ALERTA_PCT"]), float(l["ERRO_PCT"])) for l in df.to_dict("records")}
+
+
+def nivel_da_variacao(variacao, limite):
+    alerta, erro = limite
+    if abs(variacao) >= erro:
+        return "ERRO"
+    return "ALERTA" if abs(variacao) >= alerta else "OK"
+
+
+def validar_continuidade(principal, anos=None, limites=None):
+    """Compara cada ano com o anterior. Pega ano vazio ou quebrado por mudanca de layout.
+
+    Devolve as ocorrencias e a tabela anual. Um ano registrado sem nenhuma linha
+    ou com variacao acima do limite de erro bloqueia o uso; acima do limite de
+    alerta, so pede revisao.
+    """
+    anos = list(anos) if anos is not None else anos_todos()
+    limites = limites or carregar_limites()
+    p = principal.assign(
+        A=texto(principal["NU_ANO_CENSO"]),
+        MAT=pd.to_numeric(principal["QT_MAT"], errors="coerce").fillna(0),
+        EAD=texto(principal["DS_TP_MODALIDADE_ENSINO"]).eq("EaD"),
+        CH=texto(principal["CO_IES"]) + "|" + texto(principal["CO_CURSO"]),
+    )
+    ocorrencias, linhas, anterior, chaves_anteriores = [], [], None, set()
+    for ano in sorted(anos):
+        g = p[p["A"] == ano]
+        atual = {"LINHAS": len(g), "IES": g["CO_IES"].nunique(), "MATRICULAS": float(g["MAT"].sum())}
+        chaves = set(g["CH"])
+        linha = {
+            "NU_ANO_CENSO": ano, **atual,
+            "PCT_MATRICULAS_EAD": round(100 * g.loc[g["EAD"], "MAT"].sum() / atual["MATRICULAS"], 1) if atual["MATRICULAS"] else 0,
+            "CURSOS_NOVOS": len(chaves - chaves_anteriores) if anterior else "",
+            "CURSOS_QUE_SUMIRAM": len(chaves_anteriores - chaves) if anterior else "",
+        }
+        status, motivos = "OK", []
+        if atual["LINHAS"] == 0:
+            status = "ERRO"
+            motivos.append("ano registrado sem nenhuma linha")
+            ocorrencias.append(ocorrencia("ERRO", "ano_registrado_sem_linhas", ARQ_PRINCIPAL.name,
+                                          "Ano registrado em config/anos.csv sem linhas na planilha principal.",
+                                          pd.DataFrame({"NU_ANO_CENSO": [ano]}), coluna="NU_ANO_CENSO"))
+        for metrica, coluna in (("LINHAS", "VAR_LINHAS_PCT"), ("IES", "VAR_IES_PCT"), ("MATRICULAS", "VAR_MATRICULAS_PCT")):
+            if anterior and anterior[metrica] and atual["LINHAS"]:
+                variacao = 100 * (atual[metrica] - anterior[metrica]) / anterior[metrica]
+                linha[coluna] = round(variacao, 1)
+                nivel = nivel_da_variacao(variacao, limites[metrica])
+                if nivel != "OK":
+                    status = "ERRO" if nivel == "ERRO" or status == "ERRO" else "ALERTA"
+                    motivos.append(f"{metrica} {variacao:+.1f}%")
+                    ocorrencias.append(ocorrencia(nivel, "continuidade_anual", ARQ_PRINCIPAL.name,
+                                                  f"{metrica} variou {variacao:+.1f}% em relacao ao ano anterior.",
+                                                  pd.DataFrame({"NU_ANO_CENSO": [ano]}), coluna=metrica,
+                                                  valor=f"{anterior[metrica]:.0f} -> {atual[metrica]:.0f}"))
+            else:
+                linha[coluna] = ""
+        linha["STATUS"] = status
+        linha["MOTIVO"] = "; ".join(motivos)
+        linhas.append(linha)
+        if atual["LINHAS"]:
+            anterior, chaves_anteriores = atual, chaves
+    tabela = pd.DataFrame(linhas)
+    ordem = ["NU_ANO_CENSO", "LINHAS", "IES", "MATRICULAS", "VAR_LINHAS_PCT", "VAR_IES_PCT",
+             "VAR_MATRICULAS_PCT", "PCT_MATRICULAS_EAD", "CURSOS_NOVOS", "CURSOS_QUE_SUMIRAM", "STATUS", "MOTIVO"]
+    return (pd.concat(ocorrencias, ignore_index=True) if ocorrencias else pd.DataFrame(columns=COLUNAS_OCORRENCIA)), tabela[ordem]
+
+
 def gerar_resumo(principal, expandida, ocorrencias):
     erros = int(ocorrencias["NIVEL"].eq("ERRO").sum())
     alertas = int(ocorrencias["NIVEL"].eq("ALERTA").sum())
@@ -444,6 +519,8 @@ def main():
     partes.extend(validar_numericas(principal, ARQ_PRINCIPAL.name))
     partes.extend(validar_numericas(expandida, ARQ_EXPANDIDA.name))
     partes.extend(validar_expandida(principal, expandida))
+    ocorrencias_continuidade, tabela_continuidade = validar_continuidade(principal)
+    partes.append(ocorrencias_continuidade)
     partes.append(
         validar_colunas(
             {
@@ -474,6 +551,8 @@ def main():
         index=False,
         encoding="utf-8-sig",
     )
+
+    tabela_continuidade.to_csv(SAIDA_CONTINUIDADE, sep=";", index=False, encoding="utf-8-sig")
 
     print(f"Status: {status}")
     print(f"Erros: {erros}")
